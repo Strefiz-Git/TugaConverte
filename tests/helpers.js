@@ -63,8 +63,14 @@ const FIXTURES = {
     head.writeUInt32LE(n, 40);
     return Buffer.concat([head, Buffer.alloc(n, 128)]);
   },
+  // Duas páginas, para o PDF -> ZIP poder provar que traz as duas.
   pdf: () => Buffer.from(
-    '%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 99 99]>>endobj\ntrailer<</Root 1 0 R>>',
+    '%PDF-1.4\n'
+    + '1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n'
+    + '2 0 obj<</Type/Pages/Kids[3 0 R 4 0 R]/Count 2>>endobj\n'
+    + '3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 99 99]>>endobj\n'
+    + '4 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 99 99]>>endobj\n'
+    + 'trailer<</Root 1 0 R>>',
     'utf8'),
 };
 

@@ -12,34 +12,38 @@ const probe = process.platform === 'win32'
   ? (bin) => run('where', [bin])
   : (bin) => run('which', [bin]);
 
+const resolvidos = new Map();
+
 // Só para o Windows: em Linux e macOS o `which` chega, e inventar caminhos
-// aí seria adivinhar.
-const NO_WINDOWS = {
+// aí seria adivinhar. Estes são os instaladores que põem o programa numa pasta
+// e não a acrescentam ao PATH, o que fazia o site dizer "em falta" com o
+// software instalado.
+
+// Caminhos fixos: existe ou não, acabou.
+const FIXOS = {
   soffice: [
     'C:\\Program Files\\LibreOffice\\program\\soffice.exe',
     'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe',
   ],
-  // A pasta do ImageMagick leva a versão no nome, por isso dá para procurar.
-  magick: ['C:\\Program Files'],
+  '7z': [
+    'C:\\Program Files\\7-Zip\\7z.exe',
+    'C:\\Program Files (x86)\\7-Zip\\7z.exe',
+  ],
 };
 
-const resolvidos = new Map();
+// Pastas com a versão no nome: ImageMagick-7.1.2-Q16-HDRI.
+const COM_VERSAO = { magick: { pasta: 'C:\\Program Files', prefixo: 'imagemagick', exe: 'magick.exe' } };
 
 function noWindows(bin) {
-  const alvos = NO_WINDOWS[bin];
-  if (!alvos) return null;
-  for (const alvo of alvos) {
-    if (alvo.endsWith('\\soffice.exe')) {
-      if (existsSync(alvo)) return alvo;
-      continue;
-    }
-    // Pasta com a versão no nome: ImageMagick-7.1.2-Q16-HDRI.
-    const exe = 'magick.exe';
-    for (const entrada of safeReadDir(alvo)) {
-      if (!entrada.toLowerCase().startsWith('imagemagick')) continue;
-      const completo = join(alvo, entrada, exe);
-      if (existsSync(completo)) return completo;
-    }
+  for (const fixo of FIXOS[bin] || []) {
+    if (existsSync(fixo)) return fixo;
+  }
+  const comVersao = COM_VERSAO[bin];
+  if (!comVersao) return null;
+  for (const entrada of safeReadDir(comVersao.pasta)) {
+    if (!entrada.toLowerCase().startsWith(comVersao.prefixo)) continue;
+    const completo = join(comVersao.pasta, entrada, comVersao.exe);
+    if (existsSync(completo)) return completo;
   }
   return null;
 }

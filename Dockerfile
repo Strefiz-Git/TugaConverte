@@ -5,14 +5,15 @@ ENV DEBIAN_FRONTEND=noninteractive \
     NODE_ENV=production \
     DATA_DIR=/data
 
-# Os cinco motores do site. poppler entra em vez de afrouxar a política do ImageMagick.
+# Os motores do site. poppler entra em vez de afrouxar a política do ImageMagick.
+# p7zip-full dá o 7z, que junta as páginas de um PDF num ZIP.
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ffmpeg \
       imagemagick \
       libreoffice-writer libreoffice-calc libreoffice-impress \
       pandoc \
       poppler-utils \
-      zip unzip \
+      p7zip-full \
       ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 

@@ -1,4 +1,4 @@
-// PDF -> imagem com poppler. Só a 1.ª página; "todas as páginas em ZIP" está no TODO.
+// PDF -> imagem, primeira página. O que serve para um preview rápido.
 import path from 'node:path';
 
 export default {
@@ -8,11 +8,11 @@ export default {
   to: ['png', 'jpg'],
 
   build({ input, to, dir }) {
-    const kind = to === 'jpg' ? '-jpeg' : '-png';
+    const prefixo = path.join(dir, 'pagina');
     return {
-      // -singlefile escreve exatamente o prefixo indicado, sem índice de página.
-      args: [kind, '-r', '150', '-singlefile', input, path.join(dir, 'output')],
-      produced: `output.${to}`,
+      // -singlefile escreve exactamente o prefixo, sem índice de página.
+      args: [`-${to === 'jpg' ? 'jpeg' : 'png'}`, '-r', '150', '-singlefile', input, prefixo],
+      produced: `pagina.${to}`,
     };
   },
 };

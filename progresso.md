@@ -2,6 +2,25 @@
 
 Diário do projeto, mais recente em cima. Escrever com a skill `progresso`.
 
+## 2026-09-30 · PDF → todas as páginas num ZIP, e o contrato de vários passos
+
+**Feito**
+`convert.js` passou a aceitar um plano com vários passos (`steps`), que correm por ordem. Novo motor `pdfzip` (`pdftoppm` + `7z`): o poppler desenha todas as páginas e o 7-Zip junta-as num ZIP, com o glob do próprio 7-Zip para não precisar de shell. `poppler` ficou só com a primeira página, e é um motor à parte para que o PDF→PNG não exija o 7-Zip. Novo formato `zip` na categoria "Arquivos", instruções de instalação do `7z` nos seis sistemas, e `p7zip-full` no `Dockerfile`. O `7z` entrou nos caminhos de recurso do Windows.
+
+**Verificado**
+`npm test`: **33 passam, 0 falham, 0 saltam**. O teste novo cria um PDF de duas páginas e prova que o ZIP traz `pagina-1.png` e `pagina-2.png`, com a assinatura `PK\x03\x04` e o ficheiro no disco. Também verifiquei por fora os nove pacotes do `Dockerfile` contra o índice do Debian bookworm pela API madison — todos existem, e um pacote inventado devolve lista vazia, o que prova que a verificação serve para alguma coisa.
+
+**O que esta unidade desbloqueia**
+Um job deixou de estar preso a um binário. O caminho para descompactar um ZIP e converter o conteúdo é o mesmo que o `steps` abriu, com a diferença de que a saída passa a ser vários ficheiros.
+
+**Sobre o Docker**
+Não é possível aqui: o WSL não está instalado nesta máquina e o Docker Desktop precisa dele, com reinício. Não tentei à força. O que fiz em vez de construir a imagem foi verificar a parte que mais falha — os nomes dos pacotes — contra a fonte do Debian, e juntar o `p7zip-full` que o motor novo precisa. A imagem continua por construir, e isso está escrito no `TODO.md` com a razão.
+
+**Descoberta**
+O `7z` já estava instalado nesta máquina e o `Get-Command` dizia que não estava: `C:\Program Files\7-Zip\7z.exe` sem estar no PATH, exactamente o caso do LibreOffice. Terceiro instalador com o mesmo defeito, o que confirma que o caminho de recurso em `bins.js` não é um remendo para o LibreOffice mas um caso geral do Windows.
+
+## 2026-09-30 · LibreOffice instalado: dois bugs reais do Windows
+
 ## 2026-09-30 · LibreOffice instalado: dois bugs reais do Windows
 
 **Feito**

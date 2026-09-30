@@ -87,6 +87,18 @@ export const BINARIOS = {
       windows: 'winget install oschwartz10612.Poppler',
     },
   },
+  '7z': {
+    nome: '7-Zip',
+    para: 'juntar as páginas de um PDF num ZIP',
+    comandos: {
+      debian: 'sudo apt install p7zip-full',
+      fedora: 'sudo dnf install p7zip-full',
+      arch: 'sudo pacman -S p7zip',
+      alpine: 'sudo apk add p7zip',
+      macos: 'brew install p7zip',
+      windows: 'winget install 7zip.7zip',
+    },
+  },
 };
 
 export function instrucao(bin) {

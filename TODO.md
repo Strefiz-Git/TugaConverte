@@ -11,11 +11,12 @@
 - [x] Ajudar a instalar as dependências: página de diagnóstico que diz, por motor, que binários faltam e o comando exacto para o sistema onde o servidor corre, com botão de copiar.
 - [x] Instalar os binários nesta máquina e correr `npm test` sem skips: os 5 instalados, 32 testes a passar, 0 a saltar.
 - [x] Converter ficheiros reais de ponta a ponta pelo browser: txt→pdf, png→webp e vários ficheiros de uma vez.
-- [ ] Construir a imagem Docker e converter um ficheiro de cada família: o `Dockerfile` ainda não foi testado, e nada do que corremos o prova.
+- [ ] Construir a imagem Docker e converter um ficheiro de cada família: o `Dockerfile` ainda não foi testado, e nada do que corremos o prova. WSL não está instalado nesta máquina, e o Docker Desktop precisa dele.
+- [x] PDF → todas as páginas num ZIP, em dois passos (poppler desenha, 7-Zip junta).
 
 ## A seguir
 
-- [ ] PDF → PNG de todas as páginas, devolvidas num ZIP.
+- [ ] Descompactar um ZIP: extrair e converter o conteúdo, o que precisa de saída com vários ficheiros.
 - [ ] Conversão em lote: vários ficheiros com um formato de destino comum, descarregar tudo num ZIP.
 - [ ] Motor de arquivos (zip/tar/7z) com descompactar e recomprimir.
 - [ ] Notificações de fim sem polling: SSE em `/api/jobs/:id/events`.

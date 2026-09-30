@@ -2,6 +2,7 @@
 // família é. Os motores não repetem esta informação: o `check` garante que
 // nenhum formato fica sem família, em vez de os dois lados divergirem.
 export const CATEGORIAS = [
+  { id: 'arquivo', nome: 'Arquivos' },
   { id: 'documento', nome: 'Documentos' },
   { id: 'livro', nome: 'Livros eletrónicos' },
   { id: 'folha', nome: 'Folhas de cálculo' },
@@ -12,6 +13,8 @@ export const CATEGORIAS = [
 ];
 
 const FAMILIA = {
+  // Arquivos
+  zip: 'arquivo',
   // Documentos
   doc: 'documento', docx: 'documento', odt: 'documento', rtf: 'documento',
   txt: 'documento', html: 'documento', md: 'documento', rst: 'documento',
@@ -39,7 +42,7 @@ const NOMES = {
   html: 'HTML', tex: 'LaTeX', rst: 'reStructuredText', svg: 'SVG',
   jpg: 'JPEG', jpeg: 'JPEG', tiff: 'TIFF', tif: 'TIFF', md: 'Markdown',
   mp3: 'MP3', wav: 'WAV', aac: 'AAC', m4a: 'M4A', aiff: 'AIFF', wma: 'WMA',
-  mp4: 'MP4', mpeg: 'MPEG', '3gp': '3GP',
+  mp4: 'MP4', mpeg: 'MPEG', '3gp': '3GP', zip: 'ZIP',
 };
 
 const CATEGORIAS_VALIDAS = new Set(CATEGORIAS.map((c) => c.id));

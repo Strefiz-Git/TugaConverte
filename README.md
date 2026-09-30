@@ -33,12 +33,12 @@ npm start
 
 | Sistema | Comando |
 |---|---|
-| Debian / Ubuntu | `sudo apt install ffmpeg imagemagick pandoc poppler-utils libreoffice-writer libreoffice-calc libreoffice-impress` |
-| Fedora / RHEL | `sudo dnf install ffmpeg ImageMagick pandoc poppler-utils libreoffice-writer libreoffice-calc libreoffice-impress` |
-| Arch / Manjaro | `sudo pacman -S ffmpeg imagemagick pandoc poppler libreoffice-fresh` |
-| Alpine | `sudo apk add ffmpeg imagemagick pandoc poppler-utils libreoffice` |
-| macOS | `brew install ffmpeg imagemagick pandoc poppler && brew install --cask libreoffice` |
-| Windows | `winget install Gyan.FFmpeg ImageMagick.ImageMagick JohnMacFarlane.Pandoc oschwartz10612.Poppler TheDocumentFoundation.LibreOffice` |
+| Debian / Ubuntu | `sudo apt install ffmpeg imagemagick pandoc poppler-utils p7zip-full libreoffice-writer libreoffice-calc libreoffice-impress` |
+| Fedora / RHEL | `sudo dnf install ffmpeg ImageMagick pandoc poppler-utils p7zip-full libreoffice-writer libreoffice-calc libreoffice-impress` |
+| Arch / Manjaro | `sudo pacman -S ffmpeg imagemagick pandoc poppler p7zip libreoffice-fresh` |
+| Alpine | `sudo apk add ffmpeg imagemagick pandoc poppler-utils p7zip libreoffice` |
+| macOS | `brew install ffmpeg imagemagick pandoc poppler p7zip && brew install --cask libreoffice` |
+| Windows | `winget install Gyan.FFmpeg ImageMagick.ImageMagick JohnMacFarlane.Pandoc oschwartz10612.Poppler 7zip.7zip TheDocumentFoundation.LibreOffice` |
 
 Depois de instalar, reinicia o servidor: os binários são procurados uma vez, no arranque.
 
@@ -49,12 +49,13 @@ Depois de instalar, reinicia o servidor: os binários são procurados uma vez, n
 | `libreoffice` | `soffice` | doc, docx, odt, rtf, txt, html, xls, xlsx, ods, csv, ppt, pptx, odp → pdf, docx, odt, rtf, txt, html, xlsx, ods, csv, pptx, odp |
 | `pandoc` | `pandoc` | md, html, docx, odt, epub, rst, tex ↔ md, html, docx, odt, epub, rst, tex, txt |
 | `poppler` | `pdftoppm` | pdf → png, jpg (primeira página) |
+| `pdfzip` | `pdftoppm` + `7z` | pdf → zip, com **todas** as páginas |
 | `imagemagick` | `convert` / `magick` | png, jpg, jpeg, webp, gif, bmp, tiff, tif, ico, svg ↔ o mesmo conjunto |
 | `ffmpeg` | `ffmpeg` | mp3, wav, ogg, flac, aac, m4a, opus, aiff, wma ↔ o mesmo conjunto; vídeo em mp4, webm, mkv, avi, mov, flv, wmv, m4v; vídeo → gif |
 
 A lista exata do que está disponível vem sempre de `/api/formats`: a UI não inventa formatos que o servidor não tem.
 
-Limites conhecidos: o PDF só converte a imagem na primeira página; áudio não vira vídeo; o gif animado perde a animação quando muda de formato; **txt → md não existe** (o Pandoc não lê texto simples e o LibreOffice não escreve Markdown); não há conversão de arquivos (zip, rar, 7z).
+Limites conhecidos: o PDF para imagem/png dá só a primeira página (use `pdf → zip` para todas); áudio não vira vídeo; o gif animado perde a animação quando muda de formato; **txt → md não existe** (o Pandoc não lê texto simples e o LibreOffice não escreve Markdown); ainda não há descompactar nem recomprimir arquivos.
 
 ## Configuração
 

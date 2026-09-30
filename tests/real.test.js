@@ -50,9 +50,21 @@ test('wav -> mp3', skip('ffmpeg'), async () => {
   assert.ok(startsWith(data, '494433') || startsWith(data, 'fffb'), 'tem de ser MP3 ou ID3');
 });
 
-test('pdf -> png', skip('pdftoppm'), async () => {
+test('pdf -> png (primeira página)', skip('pdftoppm'), async () => {
   const { data } = await realConvert(registry, 'pdf', 'png');
   assert.ok(startsWith(data, '89504e47'), 'tem de ser PNG');
+});
+
+test('pdf -> zip com todas as páginas', skip('pdftoppm'), async () => {
+  const { data, dir } = await realConvert(registry, 'pdf', 'zip');
+  assert.ok(startsWith(data, '504b0304'), 'tem de ser um ZIP (assinatura PK\\x03\\x04)');
+  // As duas páginas do fixture têm de estar lá dentro.
+  const texto = data.toString('latin1');
+  assert.match(texto, /pagina-1\.png/);
+  assert.match(texto, /pagina-2\.png/);
+  // E tem de ser um ficheiro real, não um ZIP vazio.
+  const ficheiros = await (await import('node:fs/promises')).readdir(dir);
+  assert.ok(ficheiros.includes('output.zip'));
 });
 
 test('txt -> pdf', skip('soffice'), async () => {
