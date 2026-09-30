@@ -1,12 +1,15 @@
 // Decide qual motor trata cada par. `has` é assíncrono e injectado.
 import { hasBin } from './bins.js';
 import { CATEGORIAS, familia, nome } from '../catalogo.js';
+import { SISTEMAS, instrucao } from '../deps.js';
 
-export async function createRegistry({ engines, has = hasBin } = {}) {
+export async function createRegistry({ engines, has = hasBin, plataforma = process.platform } = {}) {
   const active = [];
+  const presentes = {};
   for (const engine of engines) {
     // Sem await, uma Promise é sempre truthy e todos os motores ficariam ativos.
     const checks = await Promise.all(engine.bins.map((bin) => has(bin)));
+    engine.bins.forEach((bin, i) => { presentes[bin] = checks[i]; });
     if (checks.every(Boolean)) active.push(engine);
   }
 
@@ -61,6 +64,32 @@ export async function createRegistry({ engines, has = hasBin } = {}) {
         });
 
       return { total: categorias.reduce((s, c) => s + c.total, 0), categorias };
+    },
+
+    // O que falta para o servidor converter tudo o que promete: por motor, os
+    // binários em falta e o comando de instalação de cada sistema suportado.
+    // Isto não instala nada (exigiria root no contentor); diz o que fazer.
+    dependencias() {
+      const motors = engines.map((engine) => {
+        const falta = engine.bins.filter((bin) => !presentes[bin]);
+        return {
+          id: engine.id,
+          pronto: falta.length === 0,
+          faltando: falta.map((bin) => {
+            const info = instrucao(bin);
+            return { bin, nome: info?.nome || bin, para: info?.para || '', comandos: info?.comandos || {} };
+          }),
+        };
+      });
+      return {
+        completo: motors.every((m) => m.pronto),
+        // O servidor só sabe a plataforma, não a distribuição. Em Linux dizemos
+        // a verdade em vez de adivinhar a distribuição de quem instalou.
+        plataforma,
+        sistemaSugerido: plataforma === 'win32' ? 'windows' : plataforma === 'darwin' ? 'macos' : null,
+        sistemas: SISTEMAS.map((s) => ({ id: s.id, nome: s.nome })),
+        motores: motors,
+      };
     },
   };
 }

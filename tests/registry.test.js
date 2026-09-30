@@ -83,6 +83,39 @@ test('um formato sem família não aparece no catálogo', async () => {
   assert.deepEqual(registry.catalogo(), { total: 0, categorias: [] });
 });
 
+test('as dependências dizem o que falta e como instalar', async () => {
+  // Só o ImageMagick presente: os outros quatro motores ficam de fora.
+  const soImagem = await createRegistry({
+    engines,
+    has: async (b) => b === 'convert' || b === 'magick',
+    plataforma: 'win32',
+  });
+  const deps = soImagem.dependencias();
+  assert.equal(deps.completo, false);
+  assert.equal(deps.plataforma, 'win32');
+  assert.equal(deps.sistemaSugerido, 'windows', 'no Windows o sistema é óbvio');
+  assert.equal(deps.sistemas.length, 6);
+
+  const ffmpeg = deps.motores.find((m) => m.id === 'ffmpeg');
+  assert.equal(ffmpeg.pronto, false);
+  assert.equal(ffmpeg.faltando[0].bin, 'ffmpeg');
+  assert.equal(ffmpeg.faltando[0].nome, 'FFmpeg');
+  assert.match(ffmpeg.faltando[0].comandos.debian, /apt install ffmpeg/);
+  assert.match(ffmpeg.faltando[0].comandos.windows, /winget install/);
+  assert.match(ffmpeg.faltando[0].comandos.alpine, /apk add/);
+
+  const imagem = deps.motores.find((m) => m.id === 'imagemagick');
+  assert.equal(imagem.pronto, true);
+  assert.deepEqual(imagem.faltando, []);
+});
+
+test('em Linux o servidor não inventa a distribuição', async () => {
+  const registry = await createRegistry({ engines, has: async () => true, plataforma: 'linux' });
+  const deps = registry.dependencias();
+  assert.equal(deps.completo, true, 'com tudo instalado não há dependências a mostrar');
+  assert.equal(deps.sistemaSugerido, null, 'só a plataforma é sabida, não a distribuição');
+});
+
 test('suporta() do motor falso decide', async () => {
   const engine = fakeEngine({ from: ['x'], to: ['y', 'z'] });
   const registry = await registryWith([engine]);

@@ -1,6 +1,7 @@
 // UI sem framework. Os formatos vêm sempre de /api/formats (Regra 9).
 import { createFormatos } from '/formatos.js';
 import { mostrarCatalogo } from '/catalogo.js';
+import { mostrarDependencias } from '/deps.js';
 import { criarJob, esperar, explicarErro } from '/api.js';
 
 const $ = (s) => document.querySelector(s);
@@ -11,6 +12,7 @@ const aviso = $('#aviso');
 const tituloDrop = $('#dropTitulo');
 const subDrop = $('#dropSub');
 const zonaCatalogo = $('#catalogo-zona');
+const zonaDeps = $('#deps-zona');
 
 let matrix = {};
 let ficheiros = [];
@@ -190,7 +192,7 @@ picker.addEventListener('change', () => converterTodos([...picker.files]));
   drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
 drop.addEventListener('drop', (e) => converterTodos([...(e.dataTransfer?.files || [])]));
 
-// Arranque: Formats, saude do servidor, e o catalogo se houver algo a mostrar.
+// Arranque: formatos, saúde do servidor, catálogo e dependências.
 async function arrancar() {
   await Promise.all([carregarFormatos(), estado()]);
   formatos = createFormatos({ matrix, onChange: rotular });
@@ -205,6 +207,13 @@ async function arrancar() {
   if (dados && dados.total) {
     zonaCatalogo.hidden = false;
     catalogo.definir(dados);
+  }
+
+  // As dependências mostram-se só quando falta alguma coisa.
+  const deps = await fetch('/api/dependencias').then((r) => r.json()).catch(() => null);
+  if (deps && !deps.completo) {
+    zonaDeps.hidden = false;
+    mostrarDependencias({ raiz: $('#deps'), aviso: null }).definir(deps);
   }
 }
 

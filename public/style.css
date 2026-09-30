@@ -27,6 +27,15 @@
 
 * { box-sizing: border-box; }
 
+/* Foco visível em todo o lado, uma vez só. */
+:is(button, a, input, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+:is(button, select, a):disabled,
+:is(button, select):disabled { cursor: not-allowed; }
+
 body {
   margin: 0;
   padding: 2rem 1rem 3rem;
@@ -66,13 +75,8 @@ h1 { margin: 0; font-size: 1.9rem; letter-spacing: -0.02em; }
   cursor: pointer;
 }
 
-.cartao:hover:not(:disabled), .cartao:focus-visible {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.cartao:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.cartao:disabled { opacity: 0.55; cursor: not-allowed; }
+.cartao:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.cartao:disabled { opacity: 0.55; }
 
 .cartao .de {
   font-size: 0.7rem;
@@ -105,8 +109,7 @@ h1 { margin: 0; font-size: 1.9rem; letter-spacing: -0.02em; }
 }
 
 .trocar:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
-.trocar:disabled { opacity: 0.4; cursor: not-allowed; }
-.trocar:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.trocar:disabled { opacity: 0.4; }
 
 #drop {
   border: 2px dashed var(--line);
@@ -117,12 +120,7 @@ h1 { margin: 0; font-size: 1.9rem; letter-spacing: -0.02em; }
   cursor: pointer;
 }
 
-#drop:hover, #drop:focus-visible, #drop.over {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-#drop:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+#drop:hover, #drop.over { border-color: var(--accent); color: var(--accent); }
 
 .big { margin: 0; font-size: 1.2rem; font-weight: 600; overflow-wrap: anywhere; }
 .small { margin: 0.3rem 0 0; color: var(--muted); font-size: 0.9rem; }
@@ -201,9 +199,47 @@ button.limpar:hover { color: var(--err); border-color: var(--err); }
 
 .familia:hover { color: var(--fg); border-color: var(--accent); }
 .familia.ativa { color: var(--accent); border-color: var(--accent); font-weight: 600; }
-.familia:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .conta { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.75rem; opacity: 0.75; }
+
+/* Diagnóstico das dependências */
+.escolha-sistema { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
+.escolha-sistema label { color: var(--muted); font-size: 0.85rem; }
+.escolha-sistema select { flex: 0 1 14rem; }
+
+.nota-sistema { width: 100%; margin: 0; color: var(--muted); font-size: 0.8rem; }
+
+.motores { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
+
+.motor { padding: 0.75rem 0.85rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
+.motor.pronto { opacity: 0.6; }
+.motor-nome { font-weight: 600; }
+.motor-para { margin: 0.2rem 0 0.6rem; color: var(--muted); font-size: 0.85rem; }
+
+.comando {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.comando code {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.copiar { flex: 0 0 auto; background: transparent; color: var(--accent); border: 1px solid var(--line); font-size: 0.8rem; padding: 0.25rem 0.5rem; cursor: pointer; }
+.copiar:hover { border-color: var(--accent); }
+
+.nota-fim { margin: 1rem 0 0; color: var(--muted); font-size: 0.8rem; }
+.tudo-pronto { margin: 0; color: var(--ok); }
 
 .formatos {
   list-style: none;
@@ -230,7 +266,6 @@ button.limpar:hover { color: var(--err); border-color: var(--err); }
 }
 
 .formato:hover { border-color: var(--accent); }
-.formato:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 .formato b {
   font-family: ui-monospace, Menlo, Consolas, monospace;
@@ -266,7 +301,7 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: 0.8rem; text-align:
   border-radius: 8px;
 }
 
-#dlgFiltro:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+#dlgFiltro:focus-visible { outline-offset: 1px; }
 
 #dlgLista {
   list-style: none;
@@ -293,12 +328,7 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: 0.8rem; text-align:
   cursor: pointer;
 }
 
-.opcao:hover, .opcao:focus-visible {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.opcao:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.opcao:hover { border-color: var(--accent); color: var(--accent); }
 
 .fechar {
   width: 100%;

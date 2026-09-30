@@ -2,6 +2,25 @@
 
 Diário do projeto, mais recente em cima. Escrever com a skill `progresso`.
 
+## 2026-09-30 · Ajuda a instalar as dependências, pelo site
+
+**Feito**
+`src/deps.js` com os seis sistemas suportados (Debian/Ubuntu, Fedora/RHEL, Arch, Alpine, macOS, Windows) e o comando de instalação de cada um dos cinco binários. `registry.dependencias()` e `GET /api/dependencias` dizem, por motor, o que falta e como instalar. `public/deps.js` desenha a secção **Dependências** no fundo da página, com selector de sistema e botão de copiar, que só aparece quando falta alguma coisa. O `check` falha se um motor declarar um binário sem instruções, ou com algum dos seis sistemas em falta. O `check` passou também a vigiar o nome do projeto (`TugaConverte` na página, `tugaconverte` no npm e no Docker, que é a convenção dos dois).
+
+**Verificado**
+`npm run check` e `npm test` (24 passam, 7 saltados). No browser contra o servidor real desta máquina, sem binários: a secção aparece, diz "Faltam binários em 5 motores", detecta o Windows sozinho, e mostra `winget install ...` para cada um. Trocando o sistema, aparecem os comandos de apt, apk e brew certos. O botão de copiar responde "seleciona à mão" porque o browser não dá permissão de área de transferência, e o comando fica sempre à vista — que era o ponto.
+
+**Não verificado**
+O caminho de "tudo instalado" (a secção esconder-se e o aviso dizer que nada falta) não foi visto: exige os cinco binários presentes, que esta máquina não tem. O `check` garante que não há buraco nos dados, mas o render desse ramo ficou por ver.
+
+**Decisões**
+O front-end passou dos 30 KB brutos que a Regra 12 fixava quando eram 9 KB. Em vez de-facturar o CSS ou de relaxar o número às cegas, o `check` passou a medir o **comprimido**, que é o que trava o carregamento, mantendo um teto bruto mais alto só para apanhar desvios: 32,0 KB brutos, 11,5 KB comprimidos, teto de 12 KB comprimidos. O número é impresso em todas as execuções. Instalar pelo site ficou de fora, e o porquê está escrito em `ideias.md`: exigiria root no contentor, e pedir `curl | sh` a quem quer converter uma imagem não é coerente.
+
+**Erro meu**
+`dependencias()` referia `motores` em vez de `motors`, que o `check` não apanha (não corre testes) e o browser também não, porque o erro só aparece em runtime dentro da função. Foi o teste que o apanhou.
+
+## 2026-09-30 · Catálogo de formatos por categoria
+
 ## 2026-09-30 · Catálogo de formatos por categoria
 
 **Feito**

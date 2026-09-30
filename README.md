@@ -29,17 +29,18 @@ npm install
 npm start
 ```
 
-Em Debian/Ubuntu:
+**Não encontrares os binários?** O próprio site diz quais faltam e dá o comando de instalação para o teu sistema: abre <http://localhost:3000> e olha para a secção **Dependências**, no fundo da página. O mesmo está em `/api/dependencias`.
 
-```bash
-sudo apt install ffmpeg imagemagick pandoc poppler-utils libreoffice-writer libreoffice-calc libreoffice-impress
-```
+| Sistema | Comando |
+|---|---|
+| Debian / Ubuntu | `sudo apt install ffmpeg imagemagick pandoc poppler-utils libreoffice-writer libreoffice-calc libreoffice-impress` |
+| Fedora / RHEL | `sudo dnf install ffmpeg ImageMagick pandoc poppler-utils libreoffice-writer libreoffice-calc libreoffice-impress` |
+| Arch / Manjaro | `sudo pacman -S ffmpeg imagemagick pandoc poppler libreoffice-fresh` |
+| Alpine | `sudo apk add ffmpeg imagemagick pandoc poppler-utils libreoffice` |
+| macOS | `brew install ffmpeg imagemagick pandoc poppler && brew install --cask libreoffice` |
+| Windows | `winget install Gyan.FFmpeg ImageMagick.ImageMagick JohnMacFarlane.Pandoc oschwartz10612.Poppler TheDocumentFoundation.LibreOffice` |
 
-Em macOS com Homebrew:
-
-```bash
-brew install ffmpeg imagemagick pandoc poppler libreoffice
-```
+Depois de instalar, reinicia o servidor: os binários são procurados uma vez, no arranque.
 
 ## Motores
 
@@ -77,6 +78,7 @@ Copiar `.env.example` para `.env` não é preciso: o servidor funciona sem nenhu
 |---|---|---|
 | `GET` | `/api/formats` | Matriz `{ origem: [destinos] }` |
 | `GET` | `/api/catalogo` | Formatos por família, com contagens, só dos motores ativos |
+| `GET` | `/api/dependencias` | Por motor: o que falta e o comando de instalação de cada sistema |
 | `GET` | `/api/health` | Motores ativos, estado da fila e `ttlMin` |
 | `POST` | `/api/jobs?to=<ext>` | `multipart/form-data` com o campo `file`. Devolve `202` e `{ id }` |
 | `GET` | `/api/jobs/:id` | `{ status, size, error }`, com `status` em `pending`, `running`, `done`, `error` |

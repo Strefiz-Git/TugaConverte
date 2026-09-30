@@ -169,6 +169,17 @@ test('descarregar antes de estar pronto dá 404', async (t) => {
   assert.equal((await app.inject({ url: '/api/jobs/nao-existe/download' })).statusCode, 404);
 });
 
+test('/api/dependencias responde mesmo sem binários', async (t) => {
+  const { app } = await setup();
+  t.after(() => app.close());
+  const res = await app.inject({ url: '/api/dependencias' });
+  assert.equal(res.statusCode, 200);
+  const deps = res.json();
+  assert.equal(deps.completo, true, 'o motor falso tem tudo o que precisa');
+  assert.equal(deps.sistemas.length, 6);
+  assert.equal(deps.motores[0].id, 'falso');
+});
+
 test('/api/catalogo devolve as famílias com contagens', async (t) => {
   const { app } = await setup();
   t.after(() => app.close());

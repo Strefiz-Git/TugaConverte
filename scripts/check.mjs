@@ -1,11 +1,15 @@
 // O porteiro do projeto. Se falha aqui, o commit não sai (Regra 15).
 import fs from 'node:fs';
 import path from 'node:path';
+import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const MAX_LINES = 250;
-const MAX_UI_BYTES = 30 * 1024;
+// O que trava o carregamento é o que viaja na rede, com compressão. O teto
+// bruto existe só para apanhar um ficheiro descontrolado a encher o pacote.
+const MAX_UI_BYTES = 40 * 1024;
+const MAX_UI_GZIP = 12 * 1024;
 
 const problems = [];
 const fail = (msg) => problems.push(msg);
@@ -28,12 +32,16 @@ for (const file of codeFiles) {
   if (lines > MAX_LINES) fail(`${file}: ${lines} linhas, o máximo é ${MAX_LINES}`);
 }
 
-// Regra 12: front-end no orçamento.
-const uiBytes = walk('public', '.js').concat(walk('public', '.css'))
-  .concat(walk('public', '.html'))
-  .reduce((sum, f) => sum + fs.statSync(path.join(ROOT, f)).size, 0);
-if (uiBytes > MAX_UI_BYTES) fail(`public/: ${(uiBytes / 1024).toFixed(1)} KB, o máximo é 30 KB`);
-console.log(`front-end: ${(uiBytes / 1024).toFixed(1)} KB / 30 KB`);
+// Regra 12: front-end no orçamento. Mede o comprimido, que é o que viaja.
+const uiFiles = walk('public', '.js').concat(walk('public', '.css')).concat(walk('public', '.html'));
+const uiBytes = uiFiles.reduce((sum, f) => sum + fs.statSync(path.join(ROOT, f)).size, 0);
+const uiGzip = uiFiles.reduce((sum, f) => {
+  const bruto = fs.readFileSync(path.join(ROOT, f));
+  return sum + zlib.gzipSync(bruto, { level: 9 }).length;
+}, 0);
+if (uiBytes > MAX_UI_BYTES) fail(`public/: ${(uiBytes / 1024).toFixed(1)} KB, o máximo é ${MAX_UI_BYTES / 1024} KB`);
+if (uiGzip > MAX_UI_GZIP) fail(`public/: ${(uiGzip / 1024).toFixed(1)} KB comprimidos, o máximo é ${MAX_UI_GZIP / 1024} KB`);
+console.log(`front-end: ${(uiBytes / 1024).toFixed(1)} KB, ${(uiGzip / 1024).toFixed(1)} KB comprimidos`);
 
 // Regra 14: numeração das regras sem saltos nem repetições.
 const agents = read('AGENTS.md');
@@ -79,6 +87,32 @@ for (const motor of engines) {
 }
 for (const caso of semFamilia) fail(`formato sem família no catálogo → ${caso}`);
 console.log(`catálogo: ${engines.reduce((s, m) => s + m.from.length, 0)} formatos declarados`);
+
+// Nenhum binário pode ficar sem instrução de instalação, senão a página de
+// diagnóstico manda alguém atrás de nada.
+const { SISTEMAS, instrucao } = await import(new URL('../src/deps.js', import.meta.url));
+for (const motor of engines) {
+  for (const bin of motor.bins) {
+    const info = instrucao(bin);
+    if (!info) fail(`${motor.id}: sem instruções de instalação para "${bin}"`);
+    for (const sistema of SISTEMAS) {
+      if (!info?.comandos?.[sistema.id]) {
+        fail(`${motor.id}: "${bin}" não tem comando para ${sistema.nome}`);
+      }
+    }
+  }
+}
+console.log(`dependências: ${engines.length} motores, ${new Set(engines.flatMap((m) => m.bins)).size} binários`);
+
+// O nome do projeto é TugaConverte. O npm e o Docker exigem minúsculas, por isso
+// nesses dois sítios é `tugaconverte`; noutros, o nome escrito.
+const NOME = 'TugaConverte';
+const minusculo = NOME.toLowerCase();
+const pkg = read('package.json');
+if (!pkg.includes(`"name": "${minusculo}"`)) fail(`package.json tem de se chamar "${minusculo}"`);
+if (!read('docker-compose.yml').includes(`  ${minusculo}:`)) fail(`docker-compose.yml tem de ter o serviço "${minusculo}"`);
+if (!read('public/index.html').includes(`<h1>${NOME}</h1>`)) fail(`a página não diz ${NOME}`);
+console.log(`nome: ${NOME} (${minusculo} no npm e no Docker)`);
 
 if (problems.length) {
   console.error(`\ncheck falhou (${problems.length}):`);

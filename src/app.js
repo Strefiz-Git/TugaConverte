@@ -40,6 +40,12 @@ export function buildApp({ registry, jobs, queue, runFn, config }) {
     return registry.catalogo();
   });
 
+  // Porque é que isto não converte? Responde por motor, com o comando.
+  app.get('/api/dependencias', async (_req, reply) => {
+    reply.header('cache-control', 'public, max-age=30');
+    return registry.dependencias();
+  });
+
   app.get('/api/health', async () => ({
     ok: true,
     engines: registry.engines.map((e) => e.id),
