@@ -122,6 +122,9 @@ Python seria uma boa escolha também, mas exigiria um servidor ASGI e dependênc
 ```bash
 npm run check     # regras do projeto: tamanho dos ficheiros, pesos, skills, motores
 npm test          # testes sem binários + testes com binários reais (saltam se faltarem)
+
+# Se um binário travar o teste, com um limite de tempo:
+JOB_TIMEOUT_SEC=60 npm test
 npm run dev       # servidor com recarregamento automático
 npm run commit -- "mensagem"    # check + testes + commit + push
 ```

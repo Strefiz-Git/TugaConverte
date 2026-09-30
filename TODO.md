@@ -5,13 +5,13 @@
 - [x] Criar a estrutura completa: servidor, 5 motores, UI, testes, Docker, AGENTS.md e 15 skills.
 - [x] Fazer o `check` validar linhas, peso do front-end, sequência das regras e skills registadas.
 - [x] Verificar a UI no browser: aviso sem motores, formato desconhecido, conversão, download e erro.
-- [ ] Instalar os binários dos 5 motores em Windows (ffmpeg, ImageMagick, LibreOffice, Pandoc, poppler) e correr `npm test` sem skips.
-- [ ] Construir a imagem Docker e converter um ficheiro de cada família (docx→pdf, png→jpg, mp3→wav, md→epub, pdf→png).
 - [x] Escolher os formatos antes do ficheiro, com botão de troca e diálogo com filtro.
 - [x] Erros da API com `code` para além da mensagem (`{ error, code, campos? }`).
 - [x] Catálogo de formatos por categoria, com contagens, alimentado por dados do servidor (categorias declaradas nos motores, nunca escritas à mão no `public/`).
 - [x] Ajudar a instalar as dependências: página de diagnóstico que diz, por motor, que binários faltam e o comando exacto para o sistema onde o servidor corre, com botão de copiar.
-- [x] Instalar os binários nesta máquina e correr `npm test` sem skips: FFmpeg, Pandoc, poppler e ImageMagick instalados; falta o LibreOffice e a imagem Docker.
+- [x] Instalar os binários nesta máquina e correr `npm test` sem skips: os 5 instalados, 32 testes a passar, 0 a saltar.
+- [x] Converter ficheiros reais de ponta a ponta pelo browser: txt→pdf, png→webp e vários ficheiros de uma vez.
+- [ ] Construir a imagem Docker e converter um ficheiro de cada família: o `Dockerfile` ainda não foi testado, e nada do que corremos o prova.
 
 ## A seguir
 

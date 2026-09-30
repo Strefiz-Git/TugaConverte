@@ -1,4 +1,7 @@
 // Escritório. Um perfil por job, senão o LibreOffice bloqueia o paralelismo.
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+
 const TEXT = ['doc', 'docx', 'odt', 'rtf', 'txt', 'html'];
 const SHEET = ['xls', 'xlsx', 'ods', 'csv'];
 const SLIDE = ['ppt', 'pptx', 'odp'];
@@ -21,10 +24,14 @@ export default {
   supports: (from, to) => (TARGETS[family(from)] || []).includes(to) && from !== to,
 
   build({ input, to, dir }) {
+    // O perfil tem de ser um URL file:// bem formado. Com `file://${dir}` o
+    // Windows produz `file://C:\Users\...`, que o LibreOffice não percebe e
+    // fica à espera de um perfil que nunca chega: o job bloqueia para sempre.
+    const perfil = pathToFileURL(join(dir, 'profile')).href;
     return {
       args: [
         '--headless', '--norestore', '--invisible',
-        `-env:UserInstallation=file://${dir}/profile`,
+        `-env:UserInstallation=${perfil}`,
         '--convert-to', to, '--outdir', dir, input,
       ],
       // O LibreOffice deriva o nome do input, não escreve output.ext.

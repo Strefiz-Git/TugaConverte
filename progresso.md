@@ -2,6 +2,27 @@
 
 Diário do projeto, mais recente em cima. Escrever com a skill `progresso`.
 
+## 2026-09-30 · LibreOffice instalado: dois bugs reais do Windows
+
+**Feito**
+`src/core/bins.js` passou a resolver o caminho de cada binário, em vez de só dizer se existe. `convert.js` usa o caminho resolvido. O engine do LibreOffice passa o perfil como URL `file://` bem formado, com `pathToFileURL`. O `runner.js` passou a resolver no `exit` em vez de esperar pelo `close`.
+
+**Verificado**
+`npm test`: **32 passam, 0 falham, 0 saltam** — os 7 testes com binários reais agora correm. Conversões reais de ponta a ponta pelo browser, contra o servidor com os 5 motores: `txt → pdf` pelo LibreOffice (12,3 KB), `png → webp` pelo ImageMagick (96 B), e três ficheiros largados de uma vez, todos "pronto". O catálogo real mostra 47 formatos em 7 categorias, e a secção Dependências esconde-se — que é o ramo que no diário anterior ficou marcado como não verificado.
+
+**Os três bugs, e porque nenhum era visível antes**
+1. **O instalador do LibreOffice no Windows não põe o `soffice` no PATH.** O software estava instalado e o site dizia "LibreOffice em falta". Agora, quando o PATH não tem, procuramos em `C:\Program Files\LibreOffice\program` e, para o ImageMagick, na pasta com a versão no nome.
+2. **`-env:UserInstallation=file://C:\Users\...`** — o motor montava o URL com barras invertidas e só duas barras. No Linux estava certo por acaso; no Windows o LibreOffice não o parseia e **ficava à espera de um perfil que nunca chegava: o job bloqueava para sempre**, sem timeout. Só se descobre com um binário real e um timeout de 5 minutos.
+3. **O `runner` esperava pelo `close`, que só dispara quando todos os streams fecham.** O `soffice.exe` no Windows deixa um processo filho a segurar o pipe do stderr. Passou a resolver no `exit`, com 150 ms para o stderr chegar.
+
+**Erros meus**
+Ao escrever o `runner.js` deixei `ifacabou = true` sem o espaço, o que o `check` não apanha (é sintaxe válida) e o teste apanhou logo a seguir. E durante o diagnóstico passei dois scripts de teste com imports que não resolviam a partir de `TEMP`, o que me custou uma volta.
+
+**Nota sobre o teste que bloqueou**
+O `real.test.js` deixou de dar saída durante 10 minutos quando o job do LibreOffice bloqueou. O runner do `node --test` tem limite por omissão, mas o `check`/commit não bloqueou porque não chegou a correr. Um `JOB_TIMEOUT_SEC` ligado por omissão nos testes localmente evitaria a próxima hora de diagnóstico.
+
+## 2026-09-30 · Binários reais instalados: os testes deixaram de saltar
+
 ## 2026-09-30 · Binários reais instalados: os testes deixaram de saltar
 
 **Feito**
