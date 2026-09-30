@@ -2,6 +2,19 @@
 
 Diário do projeto, mais recente em cima. Escrever com a skill `progresso`.
 
+## 2026-09-30 · Destino por ficheiro: converter tipos diferentes ao mesmo tempo
+
+**Feito**
+Cada linha da lista tem o seu próprio `<select>` de destino, com as opções que o servidor aceita para a extensão daquele ficheiro. Largar ficheiros deixa de estar preso ao par escolhido nas cartas: qualquer formato conhecido entra, e o par passa a ser só sugestão para as linhas em que o utilizador ainda não mexeu. Largar já não arranca conversões por si; o botão "converter" arranca cada ficheiro com o destino da sua linha, e o texto do botão diz "converter 3 ficheiros". A aceitação do ficheiro foi simplificada: só recusa o que o servidor não conhece de todo. `linha.js` ganhou o `selectDestino` por causa disto.
+
+**Verificado**
+`npm run check` (36,9 KB brutos, 13,2 KB comprimidos, dentro do tecto de 14) e `npm test` (41 passam, 0 falham, 0 saltam). No browser, com três ficheiros de tipos diferentes na mesma lista (`.png`, `.mp3`, `.svg`) e um `.xyz` rejeitado: cada linha mostrou só os destinos válidos para si, o botão contou os três, e depois de escolher `webp`/`wav`/`png` converteram os três. O `.svg → png` deu 315 B pelo ImageMagick, o `.png → webp` 96 B, e o `.mp3` — cujo teste era lixo — mostrou o erro real do ffmpeg, que é a consola a fazer exactamente o que se pede. O ZIP de lote juntou os dois que deram certo.
+
+**Descoberta**
+O `ffmpeg` mensagem de erro do ficheiro de teste ficou exposta tal e qual no estado, com o caminho do job limpo e o nome do ficheiro do utilizador intacto — o que é exactamente a promessa: a pessoa vê o que o servidor fez e porquê falhou, sem a identificar. Foi a primeira vez que um binário real falha à frente de uma pessoa, e o resultado é o que se queria.
+
+## 2026-09-30 · ZIP de vários resultados, escrito à mão
+
 ## 2026-09-30 · ZIP de vários resultados, escrito à mão
 
 **Feito**

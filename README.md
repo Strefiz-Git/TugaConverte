@@ -2,7 +2,7 @@
 
 Conversor de ficheiros **sem limites**. Inspirado no CloudConvert, ao contrário dele: sem quotas, sem limite de tamanho, sem contas, sem analytics.
 
-Se tens um ficheiro e precisas dele noutro formato, mandas e recebes. Só isso. Quando convertes vários, a interface oferece "descarregar os N resultados num ZIP".
+Se tens um ficheiro e precisas dele noutro formato, mandas e recebes. Só isso. Podes largar vários ficheiros de tipos diferentes ao mesmo tempo — cada linha tem o seu destino — e a interface oferece "descarregar os N resultados num ZIP".
 
 ## Como correr
 

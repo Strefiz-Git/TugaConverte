@@ -32,13 +32,15 @@
     </button>
   </div>
 
-  <div id="drop" tabindex="0" role="button" aria-label="Escolher ou largar ficheiro">
-    <p class="big" id="dropTitulo">Escolhe o formato de entrada</p>
-    <p class="small" id="dropSub">e depois larga o ficheiro</p>
-    <input id="picker" type="file" hidden>
+  <div id="drop" tabindex="0" role="button" aria-label="Escolher ou largar ficheiros">
+    <p class="big" id="dropTitulo">Larga os ficheiros aqui</p>
+    <p class="small" id="dropSub">e escolhe o destino de cada um</p>
+    <input id="picker" type="file" multiple hidden>
   </div>
 
   <p id="aviso" class="aviso" role="status" hidden></p>
+
+  <button type="button" id="go" class="converter" disabled>converter</button>
 
   <ul id="list" aria-live="polite"></ul>
 

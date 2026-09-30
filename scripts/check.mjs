@@ -8,11 +8,12 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const MAX_LINES = 250;
 // O que trava o carregamento é o que viaja na rede, com compressão. O tecto
 // bruto existe só para apanhar um ficheiro descontrolado a encher o pacote.
-// 13 KB comprimidos: era 12 quando o site tinha metade das funcionalidades
-// (escolher formatos, catálogo, dependências, consola, ZIP de lote). Ainda é
-// minúsculo ao lado dos 200 KB de JavaScript que o CloudConvert serve.
+// 14 KB comprimidos: era 12 quando o site tinha metade das funcionalidades
+// (escolher formatos, catálogo, dependências, consola, ZIP de lote, destino
+// por ficheiro). Ainda é minúsculo ao lado dos 200 KB de JavaScript que o
+// CloudConvert serve.
 const MAX_UI_BYTES = 40 * 1024;
-const MAX_UI_GZIP = 13 * 1024;
+const MAX_UI_GZIP = 14 * 1024;
 
 const problems = [];
 const fail = (msg) => problems.push(msg);

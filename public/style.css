@@ -141,6 +141,35 @@ h1 { margin: 0; font-size: 1.9rem; letter-spacing: -0.02em; }
 .nome { overflow-wrap: anywhere; }
 .nome b { display: block; font-weight: 600; }
 
+/* O destino de cada ficheiro, na sua linha. */
+.destino {
+  min-width: 6.5rem;
+  padding: 0.35rem 0.4rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.destino:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* Converter: só faz sentido com ficheiros na lista. */
+.converter {
+  display: block;
+  margin: 1.1rem auto 0;
+  padding: 0.6rem 1.6rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent-fg);
+  background: var(--accent);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.converter:disabled { opacity: 0.5; cursor: not-allowed; }
+
 .estado { font-size: 0.85rem; color: var(--muted); grid-column: 1 / -1; }
 .estado.ok { color: var(--ok); }
 .estado.err { color: var(--err); }
