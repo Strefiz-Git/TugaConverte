@@ -17,6 +17,8 @@ if (!message) {
 const noPush = flags.includes('--no-push');
 
 const git = (...args) => spawnSync('git', args, { cwd: ROOT, stdio: 'inherit', shell: false });
+// Com stdio: inherit não há stdout para ler: quem precisa do valor captura.
+const capture = (...args) => spawnSync('git', args, { cwd: ROOT, encoding: 'utf8', shell: false });
 const run = (cmd, args) => spawnSync(cmd, args, { cwd: ROOT, stdio: 'inherit', shell: false });
 
 if (git('rev-parse', '--git-dir').status !== 0) {
@@ -38,7 +40,7 @@ for (const [label, cmd, args] of [
 git('add', '-A');
 
 // Fora do stage: ficheiros grandes e artefactos (Regra 16).
-const staged = spawnSync('git', ['diff', '--cached', '--name-only'], { cwd: ROOT, encoding: 'utf8' });
+const staged = capture('diff', '--cached', '--name-only');
 for (const rel of (staged.stdout || '').split('\n').filter(Boolean)) {
   const big = BIG_IN_ROOT.test(rel) || safeSize(rel) > MAX_BYTES;
   if (big) {
@@ -53,7 +55,7 @@ if (noPush) {
   process.exit(0);
 }
 
-if (!git('remote').stdout || !String(git('remote').stdout || '').includes('origin')) {
+if (!capture('remote').stdout.trim().split('\n').includes('origin')) {
   console.log('sem remote "origin": commit feito, push saltado');
   process.exit(0);
 }
@@ -61,7 +63,7 @@ if (!git('remote').stdout || !String(git('remote').stdout || '').includes('origi
 if (git('push', 'origin', 'HEAD').status === 0) process.exit(0);
 
 // Push recusado: pode ser rebase, não repetir às cegas (skill git-auto-commit-push).
-const remote = git('rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}');
+const remote = capture('rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}');
 if (remote.status !== 0) {
   console.error('push falhou e o branch não tem upstream. Configura com: git push -u origin HEAD');
   process.exit(1);
