@@ -29,6 +29,8 @@ export function buildApp({ registry, jobs, queue, runFn, config }) {
     ok: true,
     engines: registry.engines.map((e) => e.id),
     queue: queue.stats(),
+    // A UI mostra este número em vez de adivinhar o TTL.
+    ttlMin: config.ttlMin,
   }));
 
   app.post('/api/jobs', async (req, reply) => {

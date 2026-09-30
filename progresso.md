@@ -2,6 +2,22 @@
 
 Diário do projeto, mais recente em cima. Escrever com a skill `progresso`.
 
+## 2026-09-30 · UI verificada no browser: três defeitos apanhados
+
+**Feito**
+`public/`: aviso visível quando `/api/health` não devolve motores, aviso quando um ficheiro é rejeitado por formato desconhecido, e o job deixou de ser apagado antes do download (passou a haver botão "apagar" e limpeza 30 s depois do clique). `src/app.js`: `/api/health` devolve agora `ttlMin`, que a UI lia e recebia `undefined`. `tests/app.test.js`: 2 testes novos (TTL no health; download sobrevive a leituras repetidas) e o fluxo completo reforçado com 3 download seguidos antes do DELETE.
+
+**Verificado**
+`npm run check` (front-end 11,2 KB / 30 KB, 18 regras, 15 skills) e `npm test` (15 passam, 7 saltados). No browser, contra um servidor descartável com motor falso (fora do repositório, já removido): sem motores aparece o aviso com a solução; `.xyz` dá "Este servidor não converte ficheiros .xyz."; ficheiro sem extensão dá a mensagem própria; conversão mostra "pronto · 26 B"; o download devolve HTTP 200 com `content-disposition: attachment; filename*=UTF-8''minha%20foto.jpg`; o botão "apagar" leva o download a 404, como esperado; uma conversão que falha mostra a mensagem do binário em vermelho (`state err`) e nenhum link. Enter na zona de largar abre o seletor. Os testes de TTL mordem: com `ttlMin: 999` o teste falha.
+
+**Não verificado**
+- Não há binários reais nesta máquina, por isso nenhum motor foi exercitado de facto. A conversão "a sério" continua por provar.
+- A travessia com Tab não pôde ser observada: a automação do browser não avança o foco além de `body`. O foco visível depende de `:focus-visible` do browser, que não devolve `true` quando o foco vem de script.
+- A imagem Docker continua por construir.
+
+**Decisões**
+Nenhuma regra nova. Os três defeitos eram todos da mesma família — a UI calava-se onde devia explicar-se — e ficaram resolvidos com testes no servidor, não com testes de browser, porque o `node --test` não corre DOM.
+
 ## 2026-09-30 · Regra 18: commit e push no fim de cada unidade de trabalho
 
 **Feito**

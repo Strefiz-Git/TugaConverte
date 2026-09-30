@@ -76,7 +76,7 @@ Copiar `.env.example` para `.env` não é preciso: o servidor funciona sem nenhu
 | Método | Rota | O que faz |
 |---|---|---|
 | `GET` | `/api/formats` | Matriz `{ origem: [destinos] }` |
-| `GET` | `/api/health` | Motores ativos e estado da fila |
+| `GET` | `/api/health` | Motores ativos, estado da fila e `ttlMin` |
 | `POST` | `/api/jobs?to=<ext>` | `multipart/form-data` com o campo `file`. Devolve `202` e `{ id }` |
 | `GET` | `/api/jobs/:id` | `{ status, size, error }`, com `status` em `pending`, `running`, `done`, `error` |
 | `GET` | `/api/jobs/:id/download` | O ficheiro convertido |
@@ -88,7 +88,7 @@ curl -s "http://localhost:3000/api/jobs/$ID"          # {"status":"done",...}
 curl -s -o foto.jpg "http://localhost:3000/api/jobs/$ID/download"
 ```
 
-O `id` é um UUID: quem o tem é quem pode descarregar. Os ficheiros são apagados `TTL_MIN` minutos depois.
+O `id` é um UUID: quem o tem é quem pode descarregar. Os ficheiros são apagados `TTL_MIN` minutos depois. A UI mostra um botão "apagar" por linha, que apaga o ficheiro de imediato.
 
 ## Porquê Node.js
 

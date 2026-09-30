@@ -5,11 +5,18 @@ const picker = $('#picker');
 const toSel = $('#to');
 const go = $('#go');
 const list = $('#list');
+const aviso = $('#aviso');
 
 let matrix = {};
 let files = [];
+let semMotores = false;
 
 const ext = (name) => name.slice(name.lastIndexOf('.') + 1).toLowerCase();
+
+function setAviso(msg) {
+  aviso.textContent = msg || '';
+  aviso.hidden = !msg;
+}
 
 async function loadFormats() {
   try {
@@ -17,6 +24,20 @@ async function loadFormats() {
     matrix = await res.json();
   } catch {
     matrix = {};
+  }
+}
+
+// Sem binários no servidor, `/api/health` devolve uma lista vazia. Dizer isso
+// é melhor do que deixar o utilizador à espera de um erro sem explicação.
+async function checkMotores() {
+  const health = await fetch('/api/health').then((r) => r.json()).catch(() => null);
+  if (!health) return;
+  if (health.ttlMin) $('#ttl').textContent = health.ttlMin;
+  semMotores = health.engines.length === 0;
+  if (semMotores) {
+    setAviso('Nenhum motor ativo: este servidor não encontrou binários de conversão. '
+      + 'A forma mais rápida é "docker compose up --build -d". Sem Docker, instala ffmpeg, '
+      + 'ImageMagick, Pandoc, poppler e LibreOffice e reinicia o servidor.');
   }
 }
 
@@ -37,9 +58,11 @@ function refreshTargets() {
 }
 
 function addFiles(incoming) {
+  const aceites = [];
   for (const file of incoming) {
     if (!matrix[ext(file.name)]) continue;
     files.push(file);
+    aceites.push(file);
     const li = document.createElement('li');
     const name = document.createElement('div');
     name.className = 'name';
@@ -57,6 +80,17 @@ function addFiles(incoming) {
     file._ui = { li, state, bar };
   }
   refreshTargets();
+
+  // Ignorar um ficheiro em silêncio é a forma mais rápida de perder a confiança
+  // de quem está a usar o site: dizer o que não foi aceite, e porquê.
+  if (aceites.length) return;
+  if (semMotores) return; // o aviso dos motores já explica tudo
+  const rejeitado = incoming[0];
+  if (!rejeitado) return;
+  const extensao = ext(rejeitado.name);
+  setAviso(extensao.length > 10 || rejeitado.name.startsWith('.')
+    ? 'Esse ficheiro não tem extensão reconhecível.'
+    : `Este servidor não converte ficheiros .${extensao}.`);
 }
 
 function setState(file, text, cls = '') {
@@ -98,14 +132,30 @@ async function poll(file, id) {
   }
 }
 
+// O job só pode ser apagado depois de descarregado: apagar aqui fazia o link
+// devolver 404 no clique seguinte.
 function link(file, id) {
+  const url = `/api/jobs/${encodeURIComponent(id)}`;
+  const limpar = () => fetch(url, { method: 'DELETE' }).catch(() => {});
+
   const a = document.createElement('a');
   a.className = 'dl';
-  a.href = `/api/jobs/${encodeURIComponent(id)}/download`;
+  a.href = `${url}/download`;
   a.textContent = 'descarregar';
-  a.setAttribute('download', '');
+  a.addEventListener('click', () => {
+    a.textContent = 'a descarregar…';
+    // Tempo para o browser pegar no ficheiro antes de o servidor o apagar.
+    setTimeout(limpar, 30_000);
+  });
   file._ui.li.append(a);
-  fetch(`/api/jobs/${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(() => {});
+
+  const btn = document.createElement('button');
+  btn.className = 'limpar';
+  btn.type = 'button';
+  btn.textContent = 'apagar';
+  btn.title = 'Apagar este ficheiro do servidor';
+  btn.addEventListener('click', () => { limpar(); btn.remove(); a.remove(); });
+  file._ui.li.append(btn);
 }
 
 async function run(file) {
@@ -147,8 +197,5 @@ picker.addEventListener('change', () => addFiles([...picker.files]));
   drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
 drop.addEventListener('drop', (e) => addFiles([...(e.dataTransfer?.files || [])]));
 
-fetch('/api/health').then((r) => r.json()).then((h) => {
-  if (h.ttlMin) $('#ttl').textContent = h.ttlMin;
-}).catch(() => { /* o TTL shown é o valor por omissão */ });
-
 await loadFormats();
+await checkMotores();

@@ -19,6 +19,18 @@ Inspiração: CloudConvert. Um ecrã, uma ação: largar ficheiros → escolher 
 
 `escolher → a enviar (%) → a converter → pronto | erro`. Erros mostram a mensagem da API e permitem tentar de novo.
 
+## Calar-se é um defeito
+
+Três coisas caladas já custaram tempo: o rodapé dizer que o ficheiro foi processado por binários que não existem, um ficheiro ser ignorado sem explicação, e `/api/health` não devolver o TTL que a UI lia. Regras:
+
+1. Se `/api/health` não trouxer motores, a UI diz isso e diz como resolver.
+2. Um ficheiro rejeitado diz porquê, em vez de desaparecer.
+3. A UI só inventa um valor quando a API não o fornece de todo; se fornece, usa o que veio.
+
+## Nunca apagar o job antes de o utilizador o descarregar
+
+O link de download e a limpeza não podem depender um do outro pela ordem errada. Apagar ao mostrar o link faz o clique seguinte dar 404. O botão "apagar" é explícito; se o download for acionado, a limpeza só acontece depois de um intervalo.
+
 ## Acessibilidade
 
 - A zona de largar é focável e abre com Enter/Espaço.
@@ -32,6 +44,10 @@ Inspiração: CloudConvert. Um ecrã, uma ação: largar ficheiros → escolher 
 2. Funciona só com teclado?
 3. Funciona num ecrã de 360 px?
 4. Testar no browser com um ficheiro real, não só ler o código.
+
+## Como testar a UI sem binários
+
+Arrancar um servidor descartável **fora do repositório** com `buildApp` e um motor falso: dá para exercitar largar ficheiro, escolher destino, converter, descarregar e o caminho de erro, sem tocar no projeto. Faz o `runFn` falhar para um destino e vê a mensagem na linha. Nunca deixar esse ficheiro no repositório.
 
 ## Ideias de UI
 

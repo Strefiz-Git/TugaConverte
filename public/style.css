@@ -124,6 +124,27 @@ a.dl {
 
 a.dl:hover { text-decoration: underline; }
 
+button.limpar {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  font-size: 0.85rem;
+  padding: 0.3rem 0.5rem;
+}
+
+button.limpar:hover { color: var(--err); border-color: var(--err); }
+
 .note { margin-top: 1.25rem; color: var(--muted); font-size: 0.85rem; }
+
+.aviso {
+  margin: 0 0 1rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
 
 footer { margin-top: 2.5rem; color: var(--muted); font-size: 0.8rem; text-align: center; }

@@ -4,6 +4,7 @@
 
 - [x] Criar a estrutura completa: servidor, 5 motores, UI, testes, Docker, AGENTS.md e 15 skills.
 - [x] Fazer o `check` validar linhas, peso do front-end, sequência das regras e skills registadas.
+- [x] Verificar a UI no browser: aviso sem motores, formato desconhecido, conversão, download e erro.
 - [ ] Instalar os binários dos 5 motores em Windows (ffmpeg, ImageMagick, LibreOffice, Pandoc, poppler) e correr `npm test` sem skips.
 - [ ] Construir a imagem Docker e converter um ficheiro de cada família (docx→pdf, png→jpg, mp3→wav, md→epub, pdf→png).
 - [ ] Abrir a UI no browser e converter um ficheiro real a partir do `public/`, incluindo a mensagem "nenhum motor ativo" quando faltam binários.
