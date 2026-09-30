@@ -54,7 +54,7 @@ Depois de instalar, reinicia o servidor: os binários são procurados uma vez, n
 
 A lista exata do que está disponível vem sempre de `/api/formats`: a UI não inventa formatos que o servidor não tem.
 
-Limites conhecidos: o PDF só converte a imagem na primeira página; áudio não vira vídeo; o gif animado perde a animação quando muda de formato; não há conversão de arquivos (zip, rar, 7z).
+Limites conhecidos: o PDF só converte a imagem na primeira página; áudio não vira vídeo; o gif animado perde a animação quando muda de formato; **txt → md não existe** (o Pandoc não lê texto simples e o LibreOffice não escreve Markdown); não há conversão de arquivos (zip, rar, 7z).
 
 ## Configuração
 

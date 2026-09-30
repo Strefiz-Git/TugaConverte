@@ -30,9 +30,18 @@ test('md -> html', skip('pandoc'), async () => {
   assert.match(data.toString('utf8'), /<html/i);
 });
 
-test('txt -> md', skip('pandoc'), async () => {
-  const { data } = await realConvert(registry, 'txt', 'md');
-  assert.match(data.toString('utf8'), /três/);
+test('md -> txt', skip('pandoc'), async () => {
+  const { data } = await realConvert(registry, 'md', 'txt');
+  // O texto tem de lá estar, sem a sintaxe do Markdown.
+  assert.match(data.toString('utf8'), /Um parágrafo/);
+  assert.doesNotMatch(data.toString('utf8'), /^#/m);
+});
+
+// O Pandoc não tem formato de entrada de texto simples, e o LibreOffice não
+// escreve Markdown. Ou seja: txt -> md não existe. Este teste existe para
+// ninguém "consertar" o motor e oferecer uma conversão que não está lá.
+test('txt -> md não é oferecido por nenhum motor', () => {
+  assert.equal(registry.find('txt', 'md'), null);
 });
 
 test('wav -> mp3', skip('ffmpeg'), async () => {

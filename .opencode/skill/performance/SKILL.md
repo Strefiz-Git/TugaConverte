@@ -9,7 +9,8 @@ Velocidade é funcionalidade (Regra 12). **Medir antes de mexer.**
 
 ## Orçamento
 
-- Front-end total (HTML + CSS + JS): **≤ 30 KB**. O `npm run check` falha acima.
+- Front-end: **≤ 12 KB comprimidos** (o que trava o carregamento) e ≤ 40 KB brutos (para apanhar desvios). O `npm run check` imprime os dois números em cada execução.
+- O orçamento mede o comprimido, não o ficheiro. Um CSS de 8 KB que comprime para 1 KB não custa nada ao utilizador.
 - Zero requests externos (sem CDN, sem fontes web, sem analytics).
 - Uma dependência de runtime nova só com medição a justificar.
 

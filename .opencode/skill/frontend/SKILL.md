@@ -9,7 +9,7 @@ Inspiração: CloudConvert. Um ecrã, uma ação: largar ficheiros → escolher 
 
 ## Restrições
 
-- HTML + CSS + JS puro, ES modules, sem bundler nem framework (Regra 12). Total ≤ 30 KB.
+- HTML + CSS + JS puro, ES modules, sem bundler nem framework (Regra 12).
 - Formatos vêm de `/api/formats` (Regra 9). Nunca hardcode de listas de formatos no JS.
 - Nomes de ficheiros só com `textContent` (skill `seguranca`).
 - Upload com `XMLHttpRequest` (o `fetch` não dá progresso de envio).
@@ -40,7 +40,7 @@ O link de download e a limpeza não podem depender um do outro pela ordem errada
 
 ## Ao acrescentar uma funcionalidade
 
-1. Cabe no orçamento de 30 KB? `npm run check`.
+1. Cabe no orçamento? `npm run check` imprime os KB brutos e os comprimidos.
 2. Funciona só com teclado?
 3. Funciona num ecrã de 360 px?
 4. Testar no browser com um ficheiro real, não só ler o código.

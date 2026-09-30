@@ -2,6 +2,25 @@
 
 Diário do projeto, mais recente em cima. Escrever com a skill `progresso`.
 
+## 2026-09-30 · Binários reais instalados: os testes deixaram de saltar
+
+**Feito**
+Instalados com winget nesta máquina: FFmpeg (Gyan.FFmpeg), Pandoc 3.12, poppler (oschwartz10612.Poppler) e ImageMagick 7.1.2. O `tests/real.test.js` deixou de ser uma lista de skips. Corrigido o teste `txt -> md`, que era uma mentira minha, e acrescentado `md -> txt`.
+
+**Verificado**
+`npm test` nesta máquina, com o PATH de máquina e de utilizador: **31 passam, 0 falham, 1 salta** (o LibreOffice, cuja instalação ainda corria). Os testes com binários reais que agora passam: png→jpg e png→webp (magic bytes), md→html (`<html`), md→txt, wav→mp3 (magic bytes ID3), pdf→png (magic bytes PNG). Comprovaram que os argumentos de cada motor são os correctos — era a maior lacuna do projecto e está fechada para estes motores.
+
+**Não verificado**
+O LibreOffice ainda não estava instalado quando isto correu, por isso `txt -> pdf` continua por provar. A imagem Docker nunca foi construída; os binários vieram do winget, não do `Dockerfile`, portanto **o Dockerfile continua por testar** — é um caminho de código completamente diferente.
+
+**Descobertas**
+`txt -> md` não existe e não pode existir com as ferramentas actuais: o Pandoc não tem formato de entrada de texto simples (`pandoc --list-input-formats` mostra `markdown`, `html`, `docx`, mas não `plain`) e o LibreOffice não escreve Markdown. A minha decisão foi NÃO inventar a conversão: o site nunca a prometeu, o `/api/formats` não a oferece, e a UI não a pode escolher. O teste passou a ser uma guarda (`registry.find('txt','md') === null`) para ninguém "consertar" isto e passar a oferecer uma conversão que não está lá. Está escrito nas limitações do README.
+
+**Erros meus**
+Escrevi `txt -> md` num teste sem confirmar que algum motor fazia isso — passei a sessão inteira a construir coisas com um teste que affirmava uma capacidade inexistente. E o `md -> txt` que escrevi para o substituir foi à procura de "três" numa fixture que diz "Teste". Os dois apanhei porque o teste correu contra o binário a sério, que é precisamente para isso que ele existe.
+
+## 2026-09-30 · Ajuda a instalar as dependências, pelo site
+
 ## 2026-09-30 · Ajuda a instalar as dependências, pelo site
 
 **Feito**

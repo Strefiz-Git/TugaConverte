@@ -11,6 +11,7 @@
 - [x] Erros da API com `code` para além da mensagem (`{ error, code, campos? }`).
 - [x] Catálogo de formatos por categoria, com contagens, alimentado por dados do servidor (categorias declaradas nos motores, nunca escritas à mão no `public/`).
 - [x] Ajudar a instalar as dependências: página de diagnóstico que diz, por motor, que binários faltam e o comando exacto para o sistema onde o servidor corre, com botão de copiar.
+- [x] Instalar os binários nesta máquina e correr `npm test` sem skips: FFmpeg, Pandoc, poppler e ImageMagick instalados; falta o LibreOffice e a imagem Docker.
 
 ## A seguir
 
