@@ -3,7 +3,8 @@ import { createFormatos } from '/formatos.js';
 import { mostrarCatalogo } from '/catalogo.js';
 import { mostrarDependencias } from '/deps.js';
 import { criarJob, esperar, explicarErro } from '/api.js';
-import { ligacoes, pintarConsola } from '/linha.js';
+import { ligacoes, pintarConsola, setEstado, pintarBarra, tamanho } from '/linha.js';
+import { carregarOpcoes, ajustarOpcao, opcoesDe } from '/opcoes.js';
 
 const $ = (s) => document.querySelector(s);
 const drop = $('#drop');
@@ -81,6 +82,7 @@ function linha(ficheiro) {
   li.append(nome, destino, estado, barra);
   list.append(li);
   ficheiro._ui = { li, estado, barra, destino, escolhido: false };
+  ajustarOpcao(destino, ficheiro.name);
 }
 
 // Cada ficheiro tem o seu destino, com as opções que o servidor aceita para
@@ -90,12 +92,12 @@ function selectDestino(ficheiro) {
   const select = document.createElement('select');
   select.className = 'destino';
   select.setAttribute('aria-label', `Converter ${ficheiro.name} para`);
-  const opcoes = matrix[ext(ficheiro.name)] || [];
-  for (const formato of [...opcoes].sort()) {
-    select.append(new Option(`.${formato}`, formato));
-  }
+  const alvos = matrix[ext(ficheiro.name)] || [];
+  for (const formato of [...alvos].sort()) select.append(new Option(`.${formato}`, formato));
   const { saida } = formatos.get();
-  if (saida && opcoes.includes(saida)) select.value = saida;
+  if (saida && alvos.includes(saida)) select.value = saida;
+  // O ajuste só aparece quando o destino escolhido tem algo ajustável.
+  select.addEventListener('change', () => ajustarOpcao(select, ficheiro.name));
   return select;
 }
 
@@ -105,15 +107,13 @@ function aplicarSugestao(saida) {
   for (const ficheiro of ficheiros) {
     const select = ficheiro._ui.destino;
     if (ficheiro._ui.escolhido || !saida) continue;
-    if (select.querySelector(`option[value="${saida}"]`)) select.value = saida;
+    if (select.querySelector(`option[value="${saida}"]`)) {
+      select.value = saida;
+      ajustarOpcao(select, ficheiro.name);
+    }
   }
 }
 
-function setEstado(ficheiro, texto, classe = '') {
-  const { estado } = ficheiro._ui;
-  estado.textContent = texto;
-  estado.className = `estado ${classe}`;
-}
 function aceitar(recebidos) {
   let aceites = 0;
 
@@ -143,13 +143,16 @@ function aceitar(recebidos) {
 }
 
 async function converter(ficheiro) {
-  const destino = ficheiro._ui.destino.value;
+  const destino = ficheiro._ui.destino;
   ficheiro._ui.escolhido = true;
   // Uma vez convertido, o destino já não muda: muda-se para um novo ficheiro.
-  ficheiro._ui.destino.disabled = true;
+  destino.disabled = true;
+  const ajustes = opcoesDe(destino);
+  const campo = destino.parentElement.querySelector('.opcao-campo');
+  if (campo) campo.querySelector('input').disabled = true;
   try {
     setEstado(ficheiro, 'a converter');
-    const job = await esperar(await criarJob(ficheiro, destino, (fraccao) => {
+    const job = await esperar(await criarJob(ficheiro, destino.value, ajustes, (fraccao) => {
       // Durante o envio a percentagem é exacta: é o que o browser mediu.
       pintarBarra(ficheiro, fracao * 100);
       setEstado(ficheiro, `a enviar ${Math.round(fraccao * 100)}%`);
@@ -170,25 +173,6 @@ async function converter(ficheiro) {
   } catch (err) {
     setEstado(ficheiro, explicarErro(err), 'err');
   }
-}
-
-// Um `<progress>` sem `value` fica indeterminada: é o que se quer quando o
-// binário não diz quanto já vai.
-function pintarBarra(ficheiro, percentagem, indeterminada = false) {
-  const { barra } = ficheiro._ui;
-  barra.hidden = false;
-  if (indeterminada && (percentagem === null || percentagem === undefined)) {
-    barra.removeAttribute('value');
-    return;
-  }
-  barra.value = percentagem;
-}
-
-function tamanho(bytes) {
-  if (!bytes) return '';
-  const u = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.min(u.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
-  return `${(bytes / 1024 ** i).toFixed(i ? 1 : 0)} ${u[i]}`;
 }
 
 // Largar ficheiros só os põe na lista; o botão "Converter" arranca cada um
@@ -224,7 +208,7 @@ drop.addEventListener('drop', (e) => largar([...(e.dataTransfer?.files || [])]))
 
 // Arranque: formatos, saúde do servidor, catálogo e dependências.
 async function arrancar() {
-  await Promise.all([carregarFormatos(), estado()]);
+  await Promise.all([carregarFormatos(), carregarOpcoes(), estado()]);
   formatos = createFormatos({ matrix, onChange: rotular });
   rotular();
 

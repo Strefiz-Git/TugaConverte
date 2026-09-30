@@ -2,6 +2,20 @@
 
 Diário do projeto, mais recente em cima. Escrever com a skill `progresso`.
 
+## 2026-10-01 · Opções por conversão
+
+**Feito**
+`src/core/opcoes.js` declara o que cada destino aceita: qualidade (jpg, jpeg, webp, 1-100, omisso 92) e bitrate de áudio (mp3, m4a, aac, ogg, opus, 32-320 kbps, omisso 128). A query do `POST /api/jobs` passa os valores; `GET /api/opcoes` publica o catálogo; `public/opcoes.js` mostra um campo por linha, só quando o destino escolhido tem algo ajustável. O ImageMagick recebe `-quality`, o ffmpeg `-b:a`. Um valor fora do intervalo é limitado, não recusado: `qualidade=500` dá 100. E um destino sem opções não ganha nenhuma.
+
+**Verificado**
+`npm test`: **57 passam, 0 falham** (8 novos). Um teste com o binário a sério converte a mesma imagem com qualidade 10 e 95 e prova que a primeira é menor. No browser, com um gradiente desenhado no próprio browser: **qualidade 10 dá 1.3 KB e qualidade 95 dá 14.5 KB**, e a consola mostra `magick ... -quality 10 ...`. O campo desaparece quando o destino passa a png e volta quando volta a jpg.
+
+**Erro meu, e o buraco que ele mostrou**
+Escrevi `from'/linha.js'` sem espaço depois do `from`. O Node diz que isso é sintaxe válida e o `check` passava; o browser é que falhava, com um erro que não punha a culpa no sítio certo — a página ficava sem uma única linha na lista e ninguém percebia porquê. Acrescentei ao `check` a conferência de `import { x }` contra os `export` do ficheiro alvo, e **estraguei o import à mão para ver se mordia**: o `check` apanhou. Uma falha que só aparece no browser, com mensagem errada, é o pior tipo de falha que há; a defesa é o `check` a cobrir o que só o browser apanha.
+
+**Não verificado**
+Não medi a diferença de qualidade visual entre 10 e 95 — o que provei é que o tamanho muda e o comando leva o valor. Codec e resolução ficaram de fora de propósito: o codec depende do que o binário tem compilado, que muda de máquina para máquina, e oferecer uma lista seria prometer o que não se pode garantir.
+
 ## 2026-09-30 · Barra de progresso a sério
 
 **Feito**

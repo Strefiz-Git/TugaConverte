@@ -10,10 +10,15 @@ export default {
   // O `-monitor` escreve a percentagem no stderr.
   progresso: 'imagemagick',
 
-  build({ input, output, from, to }) {
+  build({ input, output, from, to, opcoes }) {
     // GIF animado só dá o 1.º fotograma, salvo se o destino também for GIF.
     const src = from === 'gif' && to !== 'gif' ? `${input}[0]` : input;
     const args = [src, '-monitor'];
+    // A qualidade só faz sentido onde há compressão com perdas; num PNG
+    // seria um número sem efeito nenhum.
+    if (opcoes?.qualidade && ['jpg', 'jpeg', 'webp'].includes(to)) {
+      args.push('-quality', String(opcoes.qualidade));
+    }
     if (FLAT.includes(to)) args.push('-background', 'white', '-alpha', 'remove', '-alpha', 'off');
     if (to === 'ico') args.push('-resize', '256x256>');
     return { args: [...args, output] };

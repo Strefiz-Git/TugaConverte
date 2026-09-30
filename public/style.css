@@ -155,6 +155,26 @@ h1 { margin: 0; font-size: 1.9rem; letter-spacing: -0.02em; }
 }
 .destino:disabled { opacity: 0.55; cursor: not-allowed; }
 
+/* O ajuste (qualidade, bitrate), só quando o destino escolhido tem um. */
+.opcao-campo {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.opcao-campo input {
+  width: 4.2rem;
+  padding: 0.25rem 0.3rem;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.opcao-campo input:disabled { opacity: 0.55; }
+
 /* Converter: só faz sentido com ficheiros na lista. */
 .converter {
   display: block;

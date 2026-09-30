@@ -10,6 +10,7 @@ import fastifyStatic from '@fastify/static';
 import { convert } from './core/convert.js';
 import { CODIGO, falha } from './core/erros.js';
 import { criarZip } from './core/zip.js';
+import { catalogoOpcoes, validar as validarOpcoes } from './core/opcoes.js';
 
 const PUBLIC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
 const EXT = /^[a-z0-9]{1,10}$/;
@@ -49,6 +50,13 @@ export function buildApp({ registry, jobs, queue, runFn, config }) {
     return registry.dependencias();
   });
 
+  // O que se pode ajustar em cada destino, com os valores por omissão. É o
+  // que a UI lê para mostrar os controlos certos e nada mais.
+  app.get('/api/opcoes', async (_req, reply) => {
+    reply.header('cache-control', 'public, max-age=300');
+    return catalogoOpcoes();
+  });
+
   app.get('/api/health', async () => ({
     ok: true,
     engines: registry.engines.map((e) => e.id),
@@ -72,6 +80,8 @@ export function buildApp({ registry, jobs, queue, runFn, config }) {
     }
 
     const job = await jobs.create({ from, to, name });
+    // As opções vão validadas e limitadas: `q=500` dá 100, não um erro.
+    job.opcoes = validarOpcoes(to, req.query);
     await pipeline(file.file, fs.createWriteStream(path.join(job.dir, `input.${from}`)));
 
     if (file.file.truncated) {
@@ -93,7 +103,7 @@ export function buildApp({ registry, jobs, queue, runFn, config }) {
       const progresso = (p) => { job.percentagem = p; };
       try {
         const out = await convert({
-          engine, runFn, dir: job.dir, from, to,
+          engine, runFn, dir: job.dir, from, to, opcoes: job.opcoes,
           timeoutSec: config.jobTimeoutSec, registrar, progresso,
         });
         job.size = (await fs.promises.stat(out)).size;

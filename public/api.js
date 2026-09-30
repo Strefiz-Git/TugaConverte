@@ -19,12 +19,15 @@ function explicar(err) {
 }
 
 // XMLHttpRequest e não fetch: só o XHR dá progresso de envio.
-export function criarJob(ficheiro, destino, aoProgitar) {
+// `opcoes` é a query que o servidor valida e limita (ver `src/core/opcoes.js`).
+export function criarJob(ficheiro, destino, opcoes, aoProgitar) {
   return new Promise((resolve, reject) => {
     const form = new FormData();
     form.append('file', ficheiro);
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', `/api/jobs?to=${encodeURIComponent(destino)}`);
+    const query = [opcoes && `to=${encodeURIComponent(destino)}`, opcoes]
+      .filter(Boolean).join('&');
+    xhr.open('POST', `/api/jobs?${query}`);
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) aoProgitar(e.loaded / e.total);
     };

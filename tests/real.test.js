@@ -20,6 +20,42 @@ test('png -> jpg', skip(process.platform === 'win32' ? 'magick' : 'convert'), as
   assert.ok(data.length > 0);
 });
 
+// A opção tem de mudar o ficheiro, senão é decoração. Com a mesma imagem,
+// qualidade 10 tem de dar um JPEG mais pequeno do que 95.
+test('a qualidade muda o tamanho do ficheiro', skip(process.platform === 'win32' ? 'magick' : 'convert'), async () => {
+  const { run } = await import('../src/core/runner.js');
+  const { caminho } = await import('../src/core/bins.js');
+  const { validar } = await import('../src/core/opcoes.js');
+  const imagemagick = (await import('../src/engines/imagemagick.js')).default;
+  const fs = await import('node:fs/promises');
+  const path = await import('node:path');
+  const { tmpDir } = await import('./helpers.js');
+  await (await import('../src/core/bins.js')).resolver(caminho('magick') ? 'magick' : 'convert');
+
+  const dir = await tmpDir();
+  const magick = process.platform === 'win32' ? 'magick' : 'convert';
+  await (await import('../src/core/bins.js')).resolver(magick);
+  const cmd = caminho(magick);
+  // Uma imagem com gradiente faz muito melhor compressão do que uma cor
+  // chapada, onde a qualidade quase não muda o tamanho.
+  const entrada = path.join(dir, 'input.png');
+  await run({ cmd, args: ['-size', '400x400', 'gradient:blue-red', entrada], dir, timeoutSec: 30 });
+
+  const medir = async (qualidade) => {
+    const saida = path.join(dir, `q${qualidade}.jpg`);
+    const plano = imagemagick.build({
+      input: entrada, output: saida, from: 'png', to: 'jpg',
+      opcoes: validar('jpg', { qualidade }),
+    });
+    await run({ cmd, args: plano.args, dir, timeoutSec: 30 });
+    return (await fs.stat(saida)).size;
+  };
+
+  const baixa = await medir(10);
+  const alta = await medir(95);
+  assert.ok(baixa < alta, `qualidade 10 (${baixa} B) tem de ser menor que 95 (${alta} B)`);
+});
+
 test('png -> webp', skip(process.platform === 'win32' ? 'magick' : 'convert'), async () => {
   const { data } = await realConvert(registry, 'png', 'webp');
   assert.equal(data.subarray(0, 4).toString('ascii'), 'RIFF');

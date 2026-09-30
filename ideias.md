@@ -11,7 +11,7 @@ O que está no HTML da página deles e o que muda o nosso desenho:
 - **Os selectores de formato são popover com procura e virtualização** (`ComboboxVirtualizer`, `useTypeahead`, `useFilter`). Com 212 formatos a lista plana não chega; nós filtramos com `startsWith` acima.
 - **O job é uma cadeia de tarefas, não uma conversão** — `POST /v2/jobs` com `tasks: { import-1, convert-1, export-1 }` e operações `import/url`, `convert`, `export/url`. É a ideia mais forte deles e a maior lacuna nossa: dava import por URL, export para o teu armazenamento, e jobs de vários passos com uma só noção de estado. Ver abaixo.
 - **Import de Google Drive, Dropbox e OneDrive** com OAuth. Nós **não** fazemos isto de propósito: a promessa do TugaConverte é sem contas e sem OAuth. É uma divergência deliberada, não uma falta.
-- **Opções por conversão** que mudam com a operação: codec, bitrate, resolução, qualidade. Já está no TODO como `options` opcional no `build` do motor.
+- **Opções por conversão** que mudam com a operação: codec, bitrate, resolução, qualidade. **Feito** para o que o motor sabe mesmo ajustar: qualidade (jpg, jpeg, webp) e bitrate de áudio (mp3, m4a, aac, ogg, opus), em `src/core/opcoes.js` + `public/opcoes.js` + `GET /api/opcoes`. Fica de fora o codec e a resolução: escolher codec exige o que o binário tem compilado, que muda de máquina para máquina.
 - **Catálogo por categoria com contagens** (11 categorias, 212 formatos) e uma página por formato para SEO. Os dados vem do servidor; do nosso lado `/api/formats` devolve só a matriz, sem categorias nem nomes legíveis.
 - **Escolher a origem do ficheiro** (nuvem ou computador) num menu ao lado do botão. Versão sem OAuth: aceitar arrastar de uma pasta de ficheiros do sistema.
 

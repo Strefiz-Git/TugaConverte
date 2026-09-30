@@ -70,6 +70,17 @@ test('sem motores ativos, o health diz-o e os formatos vêm vazios', async (t) =
   assert.deepEqual((await app.inject({ url: '/api/catalogo' })).json(), { total: 0, categorias: [] });
 });
 
+test('/api/opcoes diz o que cada destino aceita', async (t) => {
+  const app = await comApp();
+  t.after(() => app.close());
+  const res = await app.inject({ url: '/api/opcoes' });
+  assert.equal(res.statusCode, 200);
+  const opcoes = res.json();
+  assert.ok(opcoes.total > 0);
+  assert.equal(opcoes.destinos.jpg[0].chave, 'qualidade');
+  assert.equal(opcoes.destinos.png, undefined, 'png não tem opções e não é anunciado');
+});
+
 test('a fila nunca passa da concorrência e esvazia', async () => {
   const queue = createQueue(2);
   let running = 0;

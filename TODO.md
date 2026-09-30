@@ -24,8 +24,9 @@
 - [ ] Escolher o destino por ficheiro — feito; falta escolher também o *formato de entrada* por ficheiro (hoje o input é escolhido na carta e o destino por linha).
 - [ ] Motor de arquivos (zip/tar/7z) com descompactar e recomprimir.
 - [ ] Notificações de fim sem polling: SSE em `/api/jobs/:id/events`.
-- [ ] Opções por formato (qualidade do JPEG, páginas do PDF, bitrate do áudio).
-- [ ] Endpoint de capacidades por motor: que operações, versões e opções existem (como o deles).
+- [x] Opções por conversão: qualidade (jpg, jpeg, webp) e bitrate (mp3, m4a, aac, ogg, opus), com campo por linha na interface e `GET /api/opcoes`.
+- [ ] Opções por formato que ainda não existem: páginas do PDF a extrair, resolución do vídeo.
+- [ ] Endpoint de capacidades por motor: que operações, versões e opções existem (como o deles). `/api/opcoes` já cobre as opções por destino; falta o resto.
 
 ## Depois
 

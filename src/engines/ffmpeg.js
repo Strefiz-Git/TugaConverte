@@ -1,5 +1,8 @@
 // Áudio e vídeo. `build` devolve argumentos, não corre nada (Regra 7).
 const AUDIO = ['mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a', 'opus', 'aiff', 'wma'];
+// Só estes têm perdas, e portanto têm bitrate. Um WAV ou FLAC não é
+// comprimido: mandar um bitrate para lá seria fingir que há escolha.
+const COM_PERDAS = ['mp3', 'ogg', 'aac', 'm4a', 'opus'];
 const VIDEO = ['mp4', 'webm', 'mkv', 'avi', 'mov', 'flv', 'wmv', 'm4v', 'mpeg', '3gp'];
 const VIDEO_OUT = ['mp4', 'webm', 'mkv', 'avi', 'mov', 'flv', 'wmv', 'm4v'];
 
@@ -18,11 +21,15 @@ export default {
     return to !== from;
   },
 
-  build({ input, output, to }) {
+  build({ input, output, to, opcoes }) {
     // `-progress pipe:1` escreve o progresso no stdout. `info` no loglevel
     // para a linha `Duration:` aparecer no stderr — sem ela não há percentagem.
     const args = ['-y', '-hide_banner', '-loglevel', 'info', '-i', input, '-progress', 'pipe:1', '-nostats'];
-    if (AUDIO.includes(to)) args.push('-vn');
+    if (AUDIO.includes(to)) {
+      args.push('-vn');
+      // O bitrate só faz sentido em áudio com perdas; num WAV seria ignorado.
+      if (opcoes?.bitrate && COM_PERDAS.includes(to)) args.push('-b:a', `${opcoes.bitrate}k`);
+    }
     if (to === 'gif') args.push('-vf', 'fps=12,scale=480:-1:flags=lanczos');
     if (to === 'mp4' || to === 'mov') {
       // yuv420p + dimensões pares: senão muitos leitores recusam o ficheiro.

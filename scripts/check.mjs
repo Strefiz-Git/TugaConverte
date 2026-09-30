@@ -8,12 +8,14 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const MAX_LINES = 250;
 // O que trava o carregamento é o que viaja na rede, com compressão. O tecto
 // bruto existe só para apanhar um ficheiro descontrolado a encher o pacote.
-// 14 KB comprimidos: era 12 quando o site tinha metade das funcionalidades
+// 15 KB comprimidos: era 12 quando o site tinha metade das funcionalidades
 // (escolher formatos, catálogo, dependências, consola, ZIP de lote, destino
-// por ficheiro). Ainda é minúsculo ao lado dos 200 KB de JavaScript que o
-// CloudConvert serve.
-const MAX_UI_BYTES = 40 * 1024;
-const MAX_UI_GZIP = 14 * 1024;
+// por ficheiro), e 14 até às opções por conversão (qualidade, bitrate) e à
+// barra de progresso verdadeira. Subir o tecto só com o motivo escrito: o
+// número mede-se, não se choca. Ainda é minúsculo ao lado dos 200 KB de
+// JavaScript que o CloudConvert serve.
+const MAX_UI_BYTES = 42 * 1024;
+const MAX_UI_GZIP = 15 * 1024;
 
 const problems = [];
 const fail = (msg) => problems.push(msg);
@@ -111,6 +113,25 @@ for (const motor of engines) {
   }
 }
 console.log(`dependências: ${engines.length} motores, ${new Set(engines.flatMap((m) => m.bins)).size} binários`);
+
+// Todo o `import { nome }` de um módulo do browser tem de bater certo com um
+// `export` desse ficheiro. Não é grace: o browser só dá o erro quando a página
+// abre, e a página não avisa ninguém — fica tudo à espera, sem linhas na lista.
+for (const ficheiro of walk('public', '.js')) {
+  const fonte = read(ficheiro);
+  for (const [, nomes, caminho] of fonte.matchAll(/import\s*\{([^}]+)\}\s*from\s*'(\/[\w.-]+\.js)'/g)) {
+    const alvo = `public${caminho}`;
+    if (!fs.existsSync(path.join(ROOT, alvo))) { fail(`${ficheiro}: importa ${caminho}, que não existe`); continue; }
+    const destino = read(alvo);
+    for (const nome of nomes.split(',').map((s) => s.trim()).filter(Boolean)) {
+      if (!new RegExp(`export\\s+(async\\s+)?(function|const|let|class)\\s+${nome}\\b`).test(destino)
+        && !new RegExp(`export\\s*\\{[^}]*\\b${nome}\\b`).test(destino)) {
+        fail(`${ficheiro}: importa "${nome}" de ${caminho}, que não o exporta`);
+      }
+    }
+  }
+}
+console.log(`módulos do browser: imports conferidos`);
 
 // O nome do projeto é TugaConverte. O npm e o Docker exigem minúsculas, por isso
 // nesses dois sítios é `tugaconverte`; noutros, o nome escrito.

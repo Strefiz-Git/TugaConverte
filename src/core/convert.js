@@ -9,10 +9,10 @@ import { criarLeitor } from './progresso.js';
  * um passo é o que sempre foi; com vários, correm por ordem e o job só
  * termina quando todos acabarem.
  */
-export async function convert({ engine, runFn, dir, from, to, timeoutSec = 0, registrar, progresso }) {
+export async function convert({ engine, runFn, dir, from, to, timeoutSec = 0, registrar, progresso, opcoes }) {
   const input = path.join(dir, `input.${from}`);
   const output = path.join(dir, `output.${to}`);
-  const plan = engine.build({ input, output, from, to, dir });
+  const plan = engine.build({ input, output, from, to, dir, opcoes });
   const passos = plan.steps || [plan];
 
   // Só os motores que sabem dizer quanto já vão dão percentagem; os outros

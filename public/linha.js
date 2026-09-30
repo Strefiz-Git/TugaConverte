@@ -5,6 +5,31 @@
 // Tudo isto vive junto porque partilha a mesma regra: o job só pode ser
 // apagado depois de descarregado, e é essa acção que alimenta o ZIP de lote.
 
+export function setEstado(ficheiro, texto, classe = '') {
+  const { estado } = ficheiro._ui;
+  estado.textContent = texto;
+  estado.className = `estado ${classe}`;
+}
+
+// Um `<progress>` sem `value` fica indeterminada: é o que se quer quando o
+// binário não diz quanto já vai. Com percentagem, é uma barra a sério.
+export function pintarBarra(ficheiro, percentagem, indeterminada = false) {
+  const { barra } = ficheiro._ui;
+  barra.hidden = false;
+  if (indeterminada && (percentagem === null || percentagem === undefined)) {
+    barra.removeAttribute('value');
+    return;
+  }
+  barra.value = percentagem;
+}
+
+export function tamanho(bytes) {
+  if (!bytes) return '';
+  const u = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.min(u.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
+  return `${(bytes / 1024 ** i).toFixed(i ? 1 : 0)} ${u[i]}`;
+}
+
 function consola(ficheiro) {
   const { li } = ficheiro._ui;
   if (li.querySelector('.consola')) return li.querySelector('.consola pre');

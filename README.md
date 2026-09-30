@@ -80,8 +80,9 @@ Copiar `.env.example` para `.env` não é preciso: o servidor funciona sem nenhu
 | `GET` | `/api/formats` | Matriz `{ origem: [destinos] }` |
 | `GET` | `/api/catalogo` | Formatos por família, com contagens, só dos motores ativos |
 | `GET` | `/api/dependencias` | Por motor: o que falta e o comando de instalação de cada sistema |
+| `GET` | `/api/opcoes` | O que se pode ajustar em cada destino, com mínimo, máximo e valor por omissão |
 | `GET` | `/api/health` | Motores ativos, estado da fila e `ttlMin` |
-| `POST` | `/api/jobs?to=<ext>` | `multipart/form-data` com o campo `file`. Devolve `202` e `{ id }` |
+| `POST` | `/api/jobs?to=<ext>&qualidade=<n>&bitrate=<n>` | `multipart/form-data` com o campo `file`. Devolve `202` e `{ id }` |
 | `GET` | `/api/jobs/:id` | `{ status, size, error, code, log, percentagem }`, com `status` em `pending`, `running`, `done`, `error` |
 | `GET` | `/api/jobs/:id/download` | O ficheiro convertido |
 | `GET` | `/api/jobs/zip?ids=id1,id2` | Junta vários resultados num ZIP |
@@ -111,6 +112,19 @@ O `id` é um UUID: quem o tem é quem pode descarregar. Os ficheiros são apagad
 O campo `log` traz a linha de comando e o que o binário disse, que a interface mostra num painel "ver o que o servidor correu". Não tem nada do teu ficheiro dentro: em disco o input chama-se `input.<ext>` e o output `output.<ext>`, e o caminho do job sai limpo. Podes usá-lo para depurar uma conversão que correu mal.
 
 O campo `percentagem` vai de 0 a 100 quando o binário sabe dizer quanto já vai (ffmpeg e ImageMagick). Nos outros motores vem a `null` e a barra fica a rodar sem número — é mais honesto do que mostrar uma percentagem inventada.
+
+### Ajustar a conversão
+
+Alguns destinos têm uma coisa que se pode escolher: a **qualidade** da imagem (jpg, jpeg, webp, 1 a 100, por omissão 92) e o **bitrate** do áudio (mp3, m4a, aac, ogg, opus, 32 a 320 kbps, por omissão 128). Vanham na query do `POST`:
+
+```bash
+curl -s -F file=@foto.png "http://localhost:3000/api/jobs?to=jpg&qualidade=40"
+curl -s -F file=@musica.wav "http://localhost:3000/api/jobs?to=mp3&bitrate=64"
+```
+
+Um valor fora do intervalo é **limitado**, não recusado: `qualidade=500` dá 100, `bitrate=8` dá 32. Um destino sem opções ignora-as. Quem não mandar nada fica no valor por omissão, por isso um cliente antigo continua a funcionar. E o ajuste só aparece onde faz sentido: um PNG não tem qualidade, e um WAV não tem bitrate — mandá-los ao motor seria fingir que há escolha.
+
+`GET /api/opcoes` diz a interface o que mostrar, para a lista de ajustes viver no servidor e não no browser.
 
 ## Porquê Node.js
 
