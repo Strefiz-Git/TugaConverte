@@ -2,6 +2,22 @@
 
 Diário do projeto, mais recente em cima. Escrever com a skill `progresso`.
 
+## 2026-09-30 · Estudo do CloudConvert: HTML da página e documentação da API
+
+**Feito**
+Nada no código: foi estudo, e as conclusões ficaram em `ideias.md` com um caderno de promote. Duas ideias promovidas a tarefa por o utilizador as ter pedido: o catálogo de formatos por categoria e os `code` nos erros.
+
+O que a página e os docs mostram e que muda o nosso desenho: os formatos são escolhidos **antes** do ficheiro (já implementado nesta sessão); o botão do meio é um menu de operação; os jobs são cadeias de `import` → `convert` → `export` e podem ter várias conversões e vários exports no mesmo job; existem operações muito além de converter (optimize, watermarks, thumbnails, merge, archives, metadata, **execute commands**); os erros trazem `code` para a máquina e `message` para a pessoa; há engines com versões fixáveis e um endpoint de capacidades por tipo de tarefa; há sandbox, regiões, webhooks, socket e signed URLs.
+
+**Decisões**
+Duas divergências deliberadas, registadas para não voltarmos a discuti-las: **não** fazemos import de Google Drive/Dropbox/OneDrive com OAuth, porque a promessa é sem contas; e **não** fazemos `execute-commands`, porque execução arbitrária no servidor não é conversão de ficheiros e é uma superfície de ataque que o contentor sem rede não torna aceitável.
+
+**Verificado**
+Nada foi executado: foi leitura de material externo. Nenhuma conclusão foi tratada como verdade do nosso lado sem medição.
+
+**Não verificado**
+As páginas `Operations`, `Tasks` e `Import/Export` da documentação não foram lidas. A forma exacta de cada tarefa (`operation`, `options`) está por confirmar se e quando o pipeline de jobs subir a tarefa.
+
 ## 2026-09-30 · UI verificada no browser: três defeitos apanhados
 
 **Feito**
