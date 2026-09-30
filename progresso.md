@@ -2,6 +2,17 @@
 
 Diário do projeto, mais recente em cima. Escrever com a skill `progresso`.
 
+## 2026-09-30 · Regra 18: commit e push no fim de cada unidade de trabalho
+
+**Feito**
+Nova Regra 18 no `AGENTS.md`: uma unidade de trabalho acabada entra no git de imediato, com `npm run commit -- "mensagem"` a fazer check, testes, commit e push num só comando, e sem passar à tarefa seguinte se o push falhar. Índice das regras, "A próxima regra é a 19" e tabela de comandos atualizados.
+
+**Verificado**
+`npm run check` com 18 regras e 15 skills. O check falharia se a numeração estivesse errada.
+
+**Não verificado**
+A Regra 18 foi escrita no commit anterior, por isso só a partir deste commit é que passa a valer.
+
 ## 2026-09-30 · Bug: os motores apareciam ativos sem binário nenhum
 
 **Feito**

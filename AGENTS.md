@@ -4,7 +4,7 @@ Regras do TugaConverte. Lê isto antes de tocar em seja o que for.
 
 ## Regras
 
-A próxima regra é a 18.
+A próxima regra é a 19.
 
 ### Regra 1 — Ler antes de escrever
 No início de uma sessão, ler este ficheiro, as últimas 3 entradas de `progresso.md` e o `TODO.md`. Sem o estado anterior, Decisions repetem-se e o trabalho anterior perde-se.
@@ -57,6 +57,9 @@ Não escrever que algo funciona sem o ter corrido. Se não foi verificado, diz-s
 ### Regra 17 — O README é escrito para quem nunca viu o projeto
 Nem decisões internas, nem histórico, nem regras de trabalho. O que é, como se corre, o que converte, como se configura, a API.
 
+### Regra 18 — Uma unidade de trabalho acabada entra no git de imediato
+Terminar o trabalho sem o commitar é o mesmo de o não ter feito: passa-se um dia, o `git checkout` apaga-o e ninguém descobre o quê. Logo que o `check` e os testes passem, corre `npm run commit -- "mensagem"`, que faz check, testes, commit e **push** num comando só. Se o push falhar, não se segue para a próxima tarefa: ou resolve-se, ou avisa-se o utilizador.
+
 ## Índice das regras
 
 | # | Regra |
@@ -78,6 +81,7 @@ Nem decisões internas, nem histórico, nem regras de trabalho. O que é, como s
 | 15 | "Verificado" é o que correu nesta sessão |
 | 16 | Segredos e artefatos fora do git |
 | 17 | O README é para quem nunca viu o projeto |
+| 18 | Uma unidade de trabalho acabada entra no git de imediato |
 
 ## Skills
 
@@ -91,7 +95,7 @@ Vêm em `.opencode/skill/<nome>/SKILL.md`.
 | `todo` | Ler, priorizar e fechar tarefas |
 | `ideias` | Guardar hipóteses e promovê-las a tarefa |
 | `readme` | Manter o README verdadeiro e útil |
-| `git-auto-commit-push` | Commit e push no fim de uma unidade de trabalho |
+| `git-auto-commit-push` | Commit e push no fim de uma unidade de trabalho (Regra 18) |
 | `codigo-modular` | Ficheiros pequenos, funções puras, dependências injetadas |
 | `testes` | Que testes correr, e como garantir que mordem |
 | `novo-conversor` | Acrescentar um formato ou um motor |
@@ -108,4 +112,5 @@ Vêm em `.opencode/skill/<nome>/SKILL.md`.
 | `npm start` | Corre o servidor |
 | `npm run check` | Regras do projeto (linhas, pesos, skills, motores) |
 | `npm test` | Testes sem binários + testes com binários reais |
-| `npm run commit -- "msg"` | check + testes + commit + push |
+| `npm run commit -- "msg"` | check + testes + commit + **push** (Regra 18) |
+| `npm run commit -- "msg" --no-push` | Igual, mas sem push |
