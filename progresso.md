@@ -2,6 +2,28 @@
 
 Diário do projeto, mais recente em cima. Escrever com a skill `progresso`.
 
+## 2026-09-30 · Erros da API com `code`, e um teste que não mordia
+
+**Feito**
+`src/core/erros.js` com os seis códigos e o helper `falha(reply, status, code, mensagem, campos)`. Todas as rotas de erro passaram a devolver `{ error, code }` e, quando é validação, `campos`. O job guarda o `code` e `/api/jobs/:id` devolve-o. A UI mapeia três códigos para mensagens próprias e cai na mensagem do servidor para o resto. README com a tabela de erros. 3 testes novos.
+
+**Verificado**
+`npm run check` (front-end 19,7 KB) e `npm test` (18 passam, 7 saltados). O teste do `code` só passou a morder depois de corrigido: com `CONVERSION_FAILED` mutado para `..._MUTADO` dava 1 falha, como deve dar. A mutação foi reposta.
+
+**Não verificado**
+A UI com a mensagem nova para `FILE_TOO_LARGE` e `UNKNOWN_FORMAT` não foi observada no browser: para isso era preciso um servidor com `MAX_UPLOAD_MB` ligado e um par impossível, e o caminho de upload que os dispara na UI é raro. O `CONVERSION_FAILED` foi visto no browser antes desta mudança, com a mensagem do servidor.
+
+**Decisões**
+Os `code` são em inglês (`MISSING_FILE`, `UNKNOWN_FORMAT`) como os do CloudConvert e como os HTTP: são para máquinas e não devem mudar de idioma. As mensagens continuam em português. Um teste de contrato escreve o valor à mão em vez de comparar com a constante `CODIGO` — comparar com a constante provaria que a constante é igual a si mesma.
+
+## 2026-09-30 · ffmpeg.wasm registado como não-caminho
+
+**Feito**
+Nada no código. A ideia em `ideias.md` passou a explicar porque é que o `@ffmpeg/ffmpeg` do npm não serve: é ffmpeg em WebAssembly a correr no browser (módulos de ~30 MB, `SharedArrayBuffer`, headers COOP/COEP), não um ffmpeg para Node. Três razões: já usamos o ffmpeg nativo em `src/engines/ffmpeg.js`; a memória do WASM tem tecto de 4 GB e rebenta com ficheiros grandes, o que quebra a promessa de "sem limites" (Regra 6); e custaria 30 MB por visitante contra um `spawn` de um binário já instalado, contra a Regra 12. O que resta de útil é um modo opcional de converter no navegador de quem está, que é um produto diferente.
+
+**Decisões**
+Registado como não-caminho para não voltar a ser discutido. O modo "converter no meu computador" fica como ideia com o preço escrito: perder ficheiros grandes.
+
 ## 2026-09-30 · Estudo do CloudConvert: HTML da página e documentação da API
 
 **Feito**

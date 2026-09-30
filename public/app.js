@@ -129,8 +129,11 @@ function enviar(ficheiro, destino) {
     xhr.onload = () => {
       let corpo = {};
       try { corpo = JSON.parse(xhr.responseText); } catch { /* resposta não-JSON */ }
-      if (xhr.status === 202) resolve(corpo.id);
-      else reject(new Error(corpo.error || `erro ${xhr.status}`));
+      if (xhr.status === 202) return resolve(corpo.id);
+      // O `code` deixa a UI decidir; a mensagem é o que se mostra.
+      const erro = new Error(corpo.error || `erro ${xhr.status}`);
+      erro.code = corpo.code || null;
+      reject(erro);
     };
     xhr.onerror = () => reject(new Error('falha de rede'));
     xhr.send(form);
@@ -143,6 +146,18 @@ async function esperar(id) {
     if (job.status === 'done' || job.status === 'error') return job;
     await new Promise((r) => setTimeout(r, 700));
   }
+}
+
+// O `code` permite uma mensagem própria; o texto do servidor é o último
+// recurso, para nunca se perder um erro que ainda não sabemos prever.
+const POR_CODE = {
+  FILE_TOO_LARGE: 'O ficheiro é maior do que este servidor aceita.',
+  UNKNOWN_FORMAT: 'Este servidor não faz essa conversão.',
+  CONVERSION_FAILED: 'A conversão falhou. O ficheiro pode estar corrompido.',
+};
+
+function explicar(err) {
+  return (err.code && POR_CODE[err.code]) || err.message;
 }
 
 // O job só pode ser apagado depois de descarregado: apagar aqui fazia o link
@@ -179,7 +194,7 @@ async function converter(ficheiro, destino) {
     setEstado(ficheiro, `pronto · ${tamanho(job.size)}`, 'ok');
     ligacoes(ficheiro, job.id);
   } catch (err) {
-    setEstado(ficheiro, err.message, 'err');
+    setEstado(ficheiro, explicar(err), 'err');
   }
 }
 

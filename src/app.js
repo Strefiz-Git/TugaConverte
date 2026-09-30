@@ -8,6 +8,7 @@ import compress from '@fastify/compress';
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 import { convert } from './core/convert.js';
+import { CODIGO, falha } from './core/erros.js';
 
 const PUBLIC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
 const EXT = /^[a-z0-9]{1,10}$/;
@@ -45,14 +46,15 @@ export function buildApp({ registry, jobs, queue, runFn, config }) {
   app.post('/api/jobs', async (req, reply) => {
     const to = String(req.query.to || '').toLowerCase();
     const file = await req.file();
-    if (!file) return reply.code(400).send({ error: 'Falta o ficheiro.' });
+    if (!file) return falha(reply, 400, CODIGO.FICHEIRO_EM_FALTA, 'Falta o ficheiro.', ['file']);
 
     const name = file.filename || 'ficheiro';
     const from = path.extname(name).slice(1).toLowerCase();
     const engine = EXT.test(from) && EXT.test(to) ? registry.find(from, to) : null;
     if (!engine) {
       file.file.resume();
-      return reply.code(400).send({ error: `Não sei converter .${from || '?'} para .${to || '?'}.` });
+      return falha(reply, 400, CODIGO.FORMATO_DESCONHECIDO,
+        `Não sei converter .${from || '?'} para .${to || '?'}.`, ['to']);
     }
 
     const job = await jobs.create({ from, to, name });
@@ -60,7 +62,8 @@ export function buildApp({ registry, jobs, queue, runFn, config }) {
 
     if (file.file.truncated) {
       await jobs.remove(job.id);
-      return reply.code(413).send({ error: 'Ficheiro acima do limite definido pelo operador.' });
+      return falha(reply, 413, CODIGO.FICHEIRO_ACIMA_DO_LIMITE,
+        'Ficheiro acima do limite definido pelo operador.');
     }
 
     queue.push(async () => {
@@ -71,6 +74,7 @@ export function buildApp({ registry, jobs, queue, runFn, config }) {
         job.status = 'done';
       } catch (err) {
         job.status = 'error';
+        job.code = CODIGO.CONVERSAO_FALHOU;
         // Só sai o caminho do job, nunca o nome do utilizador.
         job.error = err.message.split(job.dir).join('…');
       }
@@ -81,13 +85,17 @@ export function buildApp({ registry, jobs, queue, runFn, config }) {
 
   app.get('/api/jobs/:id', async (req, reply) => {
     const job = jobs.get(req.params.id);
-    if (!job) return reply.code(404).send({ error: 'Job não encontrado.' });
-    return { id: job.id, status: job.status, size: job.size, error: job.error };
+    if (!job) return falha(reply, 404, CODIGO.JOB_DESCONHECIDO, 'Job não encontrado.');
+    return { id: job.id, status: job.status, size: job.size, error: job.error, code: job.code };
   });
 
   app.get('/api/jobs/:id/download', async (req, reply) => {
     const job = jobs.get(req.params.id);
-    if (!job || job.status !== 'done') return reply.code(404).send({ error: 'Ainda não está pronto.' });
+    // 404 e não 409: é o mesmo "não há nada para dar", e não vale a pena
+    // confirmar a quem é o job.
+    if (!job || job.status !== 'done') {
+      return falha(reply, 404, CODIGO.JOB_NAO_PRONTO, 'Ainda não está pronto.');
+    }
     const base = path.basename(job.name, path.extname(job.name)) || 'ficheiro';
     reply.header('content-length', job.size);
     reply.header('content-type', 'application/octet-stream');

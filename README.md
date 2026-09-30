@@ -82,6 +82,19 @@ Copiar `.env.example` para `.env` não é preciso: o servidor funciona sem nenhu
 | `GET` | `/api/jobs/:id/download` | O ficheiro convertido |
 | `DELETE` | `/api/jobs/:id` | Apaga o job e os seus ficheiros |
 
+### Erros
+
+Toda a resposta de erro traz `error` (mensagem em português, para mostrar) e `code` (estável, para programar). Erros de validação trazem também `campos` com o campo culpado.
+
+| HTTP | `code` | Quando |
+|---|---|---|
+| 400 | `MISSING_FILE` | O pedido não tinha ficheiro |
+| 400 | `UNKNOWN_FORMAT` | Não há motor para esse par, ou a extensão não é válida |
+| 404 | `JOB_NOT_FOUND` | Job inexistente |
+| 404 | `JOB_NOT_READY` | O job ainda não terminou (ou já foi apagado) |
+| 413 | `FILE_TOO_LARGE` | Acima de `MAX_UPLOAD_MB`, se o operador o ligou |
+| — | `CONVERSION_FAILED` | O job terminou em erro; a causa está em `error` |
+
 ```bash
 ID=$(curl -s -F file=@foto.png "http://localhost:3000/api/jobs?to=jpg" | sed 's/.*"id":"\([^"]*\)".*/\1/')
 curl -s "http://localhost:3000/api/jobs/$ID"          # {"status":"done",...}

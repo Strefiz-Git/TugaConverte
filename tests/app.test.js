@@ -71,6 +71,70 @@ test('formato desconhecido é recusado antes de escrever no disco', async (t) =>
   assert.deepEqual(await fs.readdir(path.join(dataDir, 'jobs')), []);
 });
 
+// O `code` é o contrato para quem programa; a mensagem é para quem lê.
+// Os valores são escritos à mão de propósito: comparar com a constante
+// `CODIGO` provaria que a constante é igual a si mesma, e mudar o code
+// passaria o teste sem dar por isso.
+test('os erros trazem code, e os de validação trazem o campo', async (t) => {
+  const { app } = await setup();
+  t.after(() => app.close());
+
+  const semFicheiro = await app.inject({ method: 'POST', url: '/api/jobs?to=b', payload: new FormData() });
+  assert.equal(semFicheiro.json().code, 'MISSING_FILE');
+  assert.deepEqual(semFicheiro.json().campos, ['file']);
+
+  const parFamoso = await app.inject({ method: 'POST', url: '/api/jobs?to=zzz', payload: form('x.a', 'y') });
+  assert.equal(parFamoso.json().code, 'UNKNOWN_FORMAT');
+  assert.deepEqual(parFamoso.json().campos, ['to']);
+
+  const naoExiste = await app.inject({ url: '/api/jobs/nao-existe' });
+  assert.equal(naoExiste.json().code, 'JOB_NOT_FOUND');
+
+  const naoPronto = await app.inject({ url: '/api/jobs/nao-existe/download' });
+  assert.equal(naoPronto.json().code, 'JOB_NOT_READY');
+});
+
+test('uma conversão que falha reporta CONVERSION_FAILED no job', async (t) => {
+  const dataDir = await tmpDir();
+  const jobs = createJobStore({ dataDir, ttlMin: 1 });
+  await jobs.init();
+  const app = buildApp({
+    registry: await registryWith([fakeEngine()]),
+    jobs, queue: createQueue(1),
+    config: { maxUploadMb: 0, jobTimeoutSec: 0, ttlMin: 1, port: 0, host: '127.0.0.1' },
+    runFn: async () => { throw new Error('convert: código 1: ficheiro corrompido'); },
+  });
+  await app.ready();
+  t.after(() => app.close());
+
+  const { id } = (await app.inject({ method: 'POST', url: '/api/jobs?to=b', payload: form('x.a', 'y') })).json();
+  await settle();
+  const job = (await app.inject({ url: `/api/jobs/${id}` })).json();
+  assert.equal(job.status, 'error');
+  assert.equal(job.code, 'CONVERSION_FAILED');
+  assert.match(job.error, /corrompido/);
+});
+
+test('o limite do operador responde 413 com o seu code', async (t) => {
+  const dataDir = await tmpDir();
+  const jobs = createJobStore({ dataDir, ttlMin: 1 });
+  await jobs.init();
+  const app = buildApp({
+    registry: await registryWith([fakeEngine()]),
+    jobs, queue: createQueue(1),
+    // 1 KB de limite: o ficheiro de teste é maior.
+    config: { maxUploadMb: 1 / 1024, jobTimeoutSec: 0, ttlMin: 1, port: 0, host: '127.0.0.1' },
+    runFn: async () => {},
+  });
+  await app.ready();
+  t.after(() => app.close());
+
+  const res = await app.inject({ method: 'POST', url: '/api/jobs?to=b', payload: form('grande.a', 'x'.repeat(4096)) });
+  assert.equal(res.statusCode, 413);
+  assert.equal(res.json().code, 'FILE_TOO_LARGE');
+  assert.deepEqual(await fs.readdir(path.join(dataDir, 'jobs')), [], 'o job grande não fica no disco');
+});
+
 test('sem ficheiro é erro 400', async (t) => {
   const { app } = await setup();
   t.after(() => app.close());

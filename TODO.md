@@ -8,7 +8,7 @@
 - [ ] Instalar os binários dos 5 motores em Windows (ffmpeg, ImageMagick, LibreOffice, Pandoc, poppler) e correr `npm test` sem skips.
 - [ ] Construir a imagem Docker e converter um ficheiro de cada família (docx→pdf, png→jpg, mp3→wav, md→epub, pdf→png).
 - [x] Escolher os formatos antes do ficheiro, com botão de troca e diálogo com filtro.
-- [ ] Erros da API com `code` para além da mensagem (`{ error, code }`), para a UI e os clientes ramificarem.
+- [x] Erros da API com `code` para além da mensagem (`{ error, code, campos? }`).
 - [ ] Catálogo de formatos por categoria, com contagens, alimentado por dados do servidor (categorias declaradas nos motores, nunca escritas à mão no `public/`).
 
 ## A seguir
