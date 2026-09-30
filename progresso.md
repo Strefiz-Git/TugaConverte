@@ -2,6 +2,22 @@
 
 Diário do projeto, mais recente em cima. Escrever com a skill `progresso`.
 
+## 2026-09-30 · Barra de progresso a sério
+
+**Feito**
+`src/core/progresso.js` com leitores de percentagem. O ffmpeg dá `out_time_us` no stdout e a `Duration` no stderr; o ImageMagick dá `N% complete` no stderr com `-monitor`. O `runner` passou a canalizar o stdout (o ffmpeg escreve aí) e a reportar a percentagem; o job guarda-a e `/api/jobs/:id` devolve-a. A UI usa-a: barra verdadeira quando existe, **indeterminada quando não** — os motores que não sabem (LibreOffice, Pandoc, poppler) deixam a percentagem a `null` e a barra a rodar sem número, em vez de inventar. O ffmpeg ganhou `-progress pipe:1 -nostats` e `-loglevel info` (precisa da linha `Duration`).
+
+**Verificado**
+`npm test`: **49 passam, 0 falham, 0 saltam** (7 novos de progresso). O parser tem testes para a duração com horas, o tecto de 100, a ausência de duração (não inventa) e os motores que não declaram progresso. O teste de integração confirma que a percentagem do job vem do leitor. Com o binário real, convertendo um vídeo, a percentagem corre: **36% → 100% → done**. Um GIF de 3,5 MB para mp4 deu 99% e terminou.
+
+**Não verificado**
+A percentagem do ImageMagick não foi vista com o binário real a correr (o parser tem testes, mas o `-monitor` numa imagem grande não chegou a ser visto no browser). E o número de actualizações por conversão depende de quão rápido o binário é: num ficheiro pequeno o ffmpeg entrega o progresso de uma vez. A barra acerta, mas pode dar só um salto.
+
+**Descoberta**
+Escrevi `if (registar)` (sem o `r` final) na condição do destructuring `registrar`, e o Node só o deu como erro em runtime, dentro de um callback de stream. O `check` não apanha (é sintaxe válida), o `node --check` não apanha, e o grep lia o código certo — só a execução o mostrou. Foi o teste real que o apanhou, outra vez. **Erros de nome dentro de callbacks só aparecem quando o callback corre** — a lição é que uma referência a uma variável que não existe tem de ser testada com o caminho que a executa, não lida.
+
+## 2026-09-30 · Destino por ficheiro: converter tipos diferentes ao mesmo tempo
+
 ## 2026-09-30 · Destino por ficheiro: converter tipos diferentes ao mesmo tempo
 
 **Feito**

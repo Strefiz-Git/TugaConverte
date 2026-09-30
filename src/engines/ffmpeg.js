@@ -8,6 +8,8 @@ export default {
   bins: ['ffmpeg'],
   from: [...AUDIO, ...VIDEO, 'gif'],
   to: [...AUDIO, ...VIDEO_OUT, 'gif'],
+  // O ffmpeg diz o tempo processado; com a duração dá-se a percentagem.
+  progresso: 'ffmpeg',
 
   // Áudio nunca vira vídeo; GIF só sai de vídeo.
   supports(from, to) {
@@ -17,7 +19,9 @@ export default {
   },
 
   build({ input, output, to }) {
-    const args = ['-y', '-hide_banner', '-loglevel', 'error', '-i', input];
+    // `-progress pipe:1` escreve o progresso no stdout. `info` no loglevel
+    // para a linha `Duration:` aparecer no stderr — sem ela não há percentagem.
+    const args = ['-y', '-hide_banner', '-loglevel', 'info', '-i', input, '-progress', 'pipe:1', '-nostats'];
     if (AUDIO.includes(to)) args.push('-vn');
     if (to === 'gif') args.push('-vf', 'fps=12,scale=480:-1:flags=lanczos');
     if (to === 'mp4' || to === 'mov') {

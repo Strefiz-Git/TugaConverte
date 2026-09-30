@@ -8,11 +8,12 @@ const MAX_ERR = 800;
 // os streams fecham) ficava à espera para sempre.
 const SAIR = 150;
 
-export function run({ cmd, args, dir, timeoutSec = 0, registrar }) {
+export function run({ cmd, args, dir, timeoutSec = 0, registrar, leitor }) {
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, args, {
       cwd: dir,
-      stdio: ['ignore', 'ignore', 'pipe'],
+      // O stdout também entra no pipe: o ffmpeg escreve aí o progresso.
+      stdio: ['ignore', 'pipe', 'pipe'],
       windowsHide: true,
     });
 
@@ -26,18 +27,28 @@ export function run({ cmd, args, dir, timeoutSec = 0, registrar }) {
       if (timer) clearTimeout(timer);
       setTimeout(() => {
         child.stderr.destroy();
+        child.stdout.destroy();
         if (code === 0) return resolve({ err });
         const why = signal ? `terminado por ${signal}` : `código ${code}`;
         reject(new Error(`${cmd} ${why}${err ? `: ${err.trim()}` : ''}`));
       }, SAIR);
     };
 
-    child.stderr.on('data', (chunk) => {
+    const reporta = (fonte) => (chunk) => {
       const texto = chunk.toString('utf8');
-      // O log vai para a consola da interface, por isso chega cada pedaço.
-      if (registrar) registrar(texto);
-      if (err.length < MAX_ERR) err += texto.slice(0, MAX_ERR);
-    });
+      if (fonte === 'stderr') {
+        // O log vai para a consola da interface, por isso chega cada pedaço.
+        if (registrar) registrar(texto);
+        if (err.length < MAX_ERR) err += texto.slice(0, MAX_ERR);
+      }
+      // A percentagem só interessa se o binário a der.
+      if (!leitor) return;
+      const p = fonte === 'stdout' ? leitor.stdout(texto) : leitor.stderr(texto);
+      if (typeof p === 'number' && leitor.aoProgitar) leitor.aoProgitar(p);
+    };
+
+    child.stderr.on('data', reporta('stderr'));
+    child.stdout.on('data', reporta('stdout'));
 
     // A linha de comando é a informação mais útil de todas: mostra exactamente
     // o que correu. Não tem nada do utilizador, porque em disco o input é

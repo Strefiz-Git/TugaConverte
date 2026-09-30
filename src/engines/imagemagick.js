@@ -7,11 +7,13 @@ export default {
   bins: process.platform === 'win32' ? ['magick'] : ['convert'],
   from: [...IMG, 'svg'],
   to: IMG,
+  // O `-monitor` escreve a percentagem no stderr.
+  progresso: 'imagemagick',
 
   build({ input, output, from, to }) {
     // GIF animado só dá o 1.º fotograma, salvo se o destino também for GIF.
     const src = from === 'gif' && to !== 'gif' ? `${input}[0]` : input;
-    const args = [src];
+    const args = [src, '-monitor'];
     if (FLAT.includes(to)) args.push('-background', 'white', '-alpha', 'remove', '-alpha', 'off');
     if (to === 'ico') args.push('-resize', '256x256>');
     return { args: [...args, output] };

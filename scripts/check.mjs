@@ -30,9 +30,10 @@ const walk = (rel, ext) => {
 
 const codeFiles = ['src', 'scripts', 'tests', 'public'].flatMap((d) => walk(d, '.js'));
 
-// Regra 5: ficheiros pequenos.
+// Regra 5: ficheiros pequenos. Um ficheiro terminado em newline tem uma
+// linha vazia no fim que não é uma linha de código.
 for (const file of codeFiles) {
-  const lines = read(file).split('\n').length;
+  const lines = read(file).replace(/\n$/, '').split('\n').length;
   if (lines > MAX_LINES) fail(`${file}: ${lines} linhas, o máximo é ${MAX_LINES}`);
 }
 

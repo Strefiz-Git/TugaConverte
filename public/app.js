@@ -150,11 +150,21 @@ async function converter(ficheiro) {
   try {
     setEstado(ficheiro, 'a converter');
     const job = await esperar(await criarJob(ficheiro, destino, (fraccao) => {
-      ficheiro._ui.barra.hidden = false;
-      ficheiro._ui.barra.value = fracao * 100;
+      // Durante o envio a percentagem é exacta: é o que o browser mediu.
+      pintarBarra(ficheiro, fracao * 100);
       setEstado(ficheiro, `a enviar ${Math.round(fraccao * 100)}%`);
-    }), (visto) => pintarConsola(ficheiro, visto.log));
+    }), (visto) => {
+      pintarConsola(ficheiro, visto.log);
+      if (visto.status === 'running') {
+        // Com percentagem do servidor a barra é verdadeira; sem ela, fica
+        // indeterminada: preferimos honesto a número inventado.
+        const p = visto.percentagem;
+        pintarBarra(ficheiro, p, true);
+        setEstado(ficheiro, p === null || p === undefined ? 'a converter' : `a converter · ${p}%`);
+      }
+    });
     if (job.status === 'error') throw new Error(job.error || 'conversão falhou');
+    pintarBarra(ficheiro, 100);
     setEstado(ficheiro, `pronto · ${tamanho(job.size)}`, 'ok');
     ligacoes(ficheiro, job.id);
   } catch (err) {
@@ -162,11 +172,23 @@ async function converter(ficheiro) {
   }
 }
 
+// Um `<progress>` sem `value` fica indeterminada: é o que se quer quando o
+// binário não diz quanto já vai.
+function pintarBarra(ficheiro, percentagem, indeterminada = false) {
+  const { barra } = ficheiro._ui;
+  barra.hidden = false;
+  if (indeterminada && (percentagem === null || percentagem === undefined)) {
+    barra.removeAttribute('value');
+    return;
+  }
+  barra.value = percentagem;
+}
+
 function tamanho(bytes) {
   if (!bytes) return '';
-  const unidades = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.min(unidades.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
-  return `${(bytes / 1024 ** i).toFixed(i ? 1 : 0)} ${unidades[i]}`;
+  const u = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.min(u.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
+  return `${(bytes / 1024 ** i).toFixed(i ? 1 : 0)} ${u[i]}`;
 }
 
 // Largar ficheiros só os põe na lista; o botão "Converter" arranca cada um

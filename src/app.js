@@ -82,13 +82,20 @@ export function buildApp({ registry, jobs, queue, runFn, config }) {
 
     queue.push(async () => {
       job.status = 'running';
+      job.percentagem = null;
       // O log não cresce sem limite: um binário que despeja erros não pode
       // encher a memória do servidor.
       const registrar = (texto) => {
         if (job.log.join('').length < MAX_LOG) job.log.push(texto.split(job.dir).join('…'));
       };
+      // A percentagem só existe se o binário a der; sem ela, a barra fica
+      // indeterminada em vez de inventar números.
+      const progresso = (p) => { job.percentagem = p; };
       try {
-        const out = await convert({ engine, runFn, dir: job.dir, from, to, timeoutSec: config.jobTimeoutSec, registrar });
+        const out = await convert({
+          engine, runFn, dir: job.dir, from, to,
+          timeoutSec: config.jobTimeoutSec, registrar, progresso,
+        });
         job.size = (await fs.promises.stat(out)).size;
         job.status = 'done';
       } catch (err) {
@@ -111,6 +118,9 @@ export function buildApp({ registry, jobs, queue, runFn, config }) {
       size: job.size,
       error: job.error,
       code: job.code,
+      // null quando o binário não sabe dizer quanto já vai (LibreOffice,
+      // Pandoc, poppler). A UI mostra uma barra indeterminada nesse caso.
+      percentagem: job.percentagem,
       // A consola: a linha de comando e o que o binário disse. É a prova
       // visível de que o servidor não está a fazer nada por trás.
       log: job.log.join(''),

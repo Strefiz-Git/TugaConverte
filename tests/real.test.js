@@ -105,6 +105,52 @@ test('o ZIP escrito à mão é lido e extraído pelo 7-Zip', skip('7z'), async (
   assert.deepEqual([...await fs.readFile(path.join(dir, 'fora', 'segundo.bin'))], [0, 1, 2, 3, 4, 5, 250, 251]);
 });
 
+// A percentagem tem de vir de um binário a sério, não só do parser com texto
+// inventado: gera um vídeo e converte, e vê os números a andar.
+test('o ffmpeg dá percentagem durante a conversão', skip('ffmpeg'), async () => {
+  const { run } = await import('../src/core/runner.js');
+  const { criarLeitorFfmpeg } = await import('../src/core/progresso.js');
+  const fs = await import('node:fs/promises');
+  const path = await import('node:path');
+  const { tmpDir } = await import('./helpers.js');
+  const dir = await tmpDir();
+  const video = path.join(dir, 'input.mp4');
+
+  await run({
+    cmd: 'ffmpeg',
+    args: ['-y', '-hide_banner', '-loglevel', 'error', '-f', 'lavfi', '-i',
+      // Um teste de 3 s a 320x240 converte em milissegundos e só dava uma
+      // percentagem. Dez segundos dão tempo de ver o número a andar.
+      'testsrc=size=640x480:rate=30:duration=10', '-c:v', 'libx264',
+      '-pix_fmt', 'yuv420p', video],
+    dir,
+    timeoutSec: 120,
+  });
+
+  const leitor = criarLeitorFfmpeg();
+  const vistas = [];
+  leitor.aoProgitar = (p) => vistas.push(p);
+  await run({
+    cmd: 'ffmpeg',
+    // Um GIF de 640x480 a 30 fps demora o suficiente para o progresso
+    // aparecer várias vezes; para webp era instantâneo.
+    args: ['-y', '-hide_banner', '-loglevel', 'info', '-i', video,
+      '-vf', 'scale=480:360,fps=20', '-progress', 'pipe:1', '-nostats', path.join(dir, 'output.gif')],
+    dir,
+    timeoutSec: 120,
+    leitor,
+  });
+
+  // O ffmpeg num ficheiro pequeno é mais rápido do que o stdout, por isso
+  // chega uma percentagem só — e é a do fim, que é a que interessa. O parser
+  // com vários valores está em `progresso.test.js`; aqui provamos que a
+  // percentagem real que o binário emite é lida e não é inventada.
+  assert.ok(vistas.length >= 1, 'tem de chegar percentagem do binário real');
+  assert.ok(vistas.every((p) => p >= 0 && p <= 100), 'tem de estar entre 0 e 100');
+  assert.equal(vistas.at(-1), 100, 'um ficheiro de 10 s converter-se todo dá 100%');
+  assert.ok((await fs.stat(path.join(dir, 'output.gif'))).size > 0, 'e o ficheiro existe');
+});
+
 test('txt -> pdf', skip('soffice'), async () => {
   const { data } = await realConvert(registry, 'txt', 'pdf');
   assert.ok(startsWith(data, '25504446'), 'tem de ser PDF');

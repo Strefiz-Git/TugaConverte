@@ -16,6 +16,7 @@
 - [x] Consola por ficheiro: a linha de comando e o que o binário disse, a aparecer enquanto converte.
 - [x] Descarregar vários resultados num ZIP, com o escritor de ZIP em Node e sem dependências.
 - [x] Converter ficheiros de tipos diferentes ao mesmo tempo, cada um com o seu destino.
+- [x] Barra de progresso verdadeira nos motores que sabem dizer quanto já vão (ffmpeg, ImageMagick); indeterminada nos outros.
 
 ## A seguir
 
