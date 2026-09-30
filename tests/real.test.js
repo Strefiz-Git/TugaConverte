@@ -67,6 +67,44 @@ test('pdf -> zip com todas as páginas', skip('pdftoppm'), async () => {
   assert.ok(ficheiros.includes('output.zip'));
 });
 
+// O ZIP de vários resultados é escrito à mão, em `src/core/zip.js`. O 7-Zip é
+// o juiz: se ele lista e extrai o que escrevemos, o formato está certo.
+test('o ZIP escrito à mão é lido e extraído pelo 7-Zip', skip('7z'), async () => {
+  const { criarZip } = await import('../src/core/zip.js');
+  const { run } = await import('../src/core/runner.js');
+  const { caminho, resolver } = await import('../src/core/bins.js');
+  const fs = await import('node:fs/promises');
+  const path = await import('node:path');
+  const { tmpDir } = await import('./helpers.js');
+  await resolver('7z');
+
+  const dir = await tmpDir();
+  const alvo = path.join(dir, 'teste.zip');
+  await fs.writeFile(alvo, criarZip([
+    { nome: 'primeiro', ext: 'txt', dados: Buffer.from('olá\n', 'utf8') },
+    { nome: 'segundo', ext: 'bin', dados: Buffer.from([0, 1, 2, 3, 4, 5, 250, 251]) },
+  ]));
+
+  // O 7z escreve a listagem no stdout, por isso aqui vai o execFile e não o
+  // nosso `run` (que só devolve stderr e rejeita o código 1 da listagem).
+  const { execFile } = await import('node:child_process');
+  const { promisify } = await import('node:util');
+  const chamada = promisify(execFile);
+  const { stdout } = await chamada(caminho('7z'), ['l', alvo], { cwd: dir });
+  assert.match(stdout, /primeiro\.txt/);
+  assert.match(stdout, /segundo\.bin/);
+
+  // E tem de extrair o conteúdo certo, não só dizer os nomes.
+  await run({
+    cmd: caminho('7z'),
+    args: ['x', alvo, `-o${path.join(dir, 'fora')}`, '-y', '-bso0', '-bsp0'],
+    dir,
+    timeoutSec: 30,
+  });
+  assert.equal(await fs.readFile(path.join(dir, 'fora', 'primeiro.txt'), 'utf8'), 'olá\n');
+  assert.deepEqual([...await fs.readFile(path.join(dir, 'fora', 'segundo.bin'))], [0, 1, 2, 3, 4, 5, 250, 251]);
+});
+
 test('txt -> pdf', skip('soffice'), async () => {
   const { data } = await realConvert(registry, 'txt', 'pdf');
   assert.ok(startsWith(data, '25504446'), 'tem de ser PDF');

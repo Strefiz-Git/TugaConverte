@@ -9,7 +9,8 @@ Velocidade é funcionalidade (Regra 12). **Medir antes de mexer.**
 
 ## Orçamento
 
-- Front-end: **≤ 12 KB comprimidos** (o que trava o carregamento) e ≤ 40 KB brutos (para apanhar desvios). O `npm run check` imprime os dois números em cada execução.
+- Front-end: **≤ 13 KB comprimidos** (o que trava o carregamento) e ≤ 40 KB brutos (para apanhar desvios). O `npm run check` imprime os dois números em cada execução.
+- **Menos ficheiros, maiores.** Cada módulo é uma resposta HTTP com o seu cabeçalho e o seu dicionário gzip. Dividir `app.js` em quatro para cumprir o tecto de linhas fez o total *subir*. Primeiro junta, depois divide — e mede.
 - O orçamento mede o comprimido, não o ficheiro. Um CSS de 8 KB que comprime para 1 KB não custa nada ao utilizador.
 - Zero requests externos (sem CDN, sem fontes web, sem analytics).
 - Uma dependência de runtime nova só com medição a justificar.

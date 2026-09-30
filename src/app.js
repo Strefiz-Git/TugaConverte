@@ -9,6 +9,7 @@ import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 import { convert } from './core/convert.js';
 import { CODIGO, falha } from './core/erros.js';
+import { criarZip } from './core/zip.js';
 
 const PUBLIC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
 const EXT = /^[a-z0-9]{1,10}$/;
@@ -128,6 +129,36 @@ export function buildApp({ registry, jobs, queue, runFn, config }) {
     reply.header('content-type', 'application/octet-stream');
     reply.header('content-disposition', `attachment; filename*=UTF-8''${encodeURIComponent(`${base}.${job.to}`)}`);
     return reply.send(fs.createReadStream(path.join(job.dir, `output.${job.to}`)));
+  });
+
+  // Vários resultados num ZIP. Conhecer os UUID é a credencial (Regra 8), como
+  // no download de um job; aqui são vários.
+  app.get('/api/jobs/zip', async (req, reply) => {
+    const pedidos = String(req.query.ids || '').split(',').map((s) => s.trim()).filter(Boolean);
+    if (!pedidos.length) {
+      return falha(reply, 400, CODIGO.FICHEIRO_EM_FALTA, 'Indica os jobs com ?ids=id1,id2.');
+    }
+    if (pedidos.length > 500) {
+      return falha(reply, 400, CODIGO.FICHEIRO_ACIMA_DO_LIMITE, 'Demasiados jobs num só ZIP.');
+    }
+
+    const entradas = [];
+    for (const id of pedidos) {
+      const job = jobs.get(id);
+      if (!job) return falha(reply, 404, CODIGO.JOB_DESCONHECIDO, `Job ${id} não existe.`);
+      if (job.status !== 'done') {
+        return falha(reply, 409, CODIGO.JOB_NAO_PRONTO, `O job ${id} ainda não está pronto.`);
+      }
+      const base = path.basename(job.name, path.extname(job.name)) || 'ficheiro';
+      const ficheiro = path.join(job.dir, `output.${job.to}`);
+      entradas.push({ nome: base, ext: job.to, dados: await fs.promises.readFile(ficheiro) });
+    }
+
+    const zip = criarZip(entradas);
+    reply.header('content-length', zip.length);
+    reply.header('content-type', 'application/zip');
+    reply.header('content-disposition', `attachment; filename*=UTF-8''conversoes.zip`);
+    return reply.send(zip);
   });
 
   app.delete('/api/jobs/:id', async (req, reply) => {

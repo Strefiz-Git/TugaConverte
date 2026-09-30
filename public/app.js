@@ -3,6 +3,7 @@ import { createFormatos } from '/formatos.js';
 import { mostrarCatalogo } from '/catalogo.js';
 import { mostrarDependencias } from '/deps.js';
 import { criarJob, esperar, explicarErro } from '/api.js';
+import { ligacoes, pintarConsola } from '/linha.js';
 
 const $ = (s) => document.querySelector(s);
 const drop = $('#drop');
@@ -87,32 +88,6 @@ function setEstado(ficheiro, texto, classe = '') {
   estado.textContent = texto;
   estado.className = `estado ${classe}`;
 }
-
-// A consola: a linha de comando e o que o binário disse. Não tem nada do
-// utilizador, porque em disco o ficheiro é `input.<ext>`.
-function consola(ficheiro) {
-  const { li } = ficheiro._ui;
-  if (li.querySelector('.consola')) return li.querySelector('.consola pre');
-
-  const detalhes = document.createElement('details');
-  detalhes.className = 'consola';
-  const resumo = document.createElement('summary');
-  resumo.textContent = 'ver o que o servidor correu';
-  const saida = document.createElement('pre');
-  detalhes.append(resumo, saida);
-  li.append(detalhes);
-  return saida;
-}
-
-function pintarConsola(ficheiro, log) {
-  if (!log) return;
-  const alvo = consola(ficheiro);
-  if (alvo.textContent === log) return;
-  alvo.textContent = log;
-  // Com o painel aberto, descer sozinho evita ter de arrastar a barra.
-  if (alvo.parentElement.open) alvo.scrollTop = alvo.scrollHeight;
-}
-
 function aceitar(recebidos) {
   const { entrada: esperada } = formatos.get();
   let aceites = 0;
@@ -142,32 +117,6 @@ function aceitar(recebidos) {
   } else {
     dizer(`Este servidor não converte ficheiros .${format}.`);
   }
-}
-
-// O job só pode ser apagado depois de descarregado: apagar aqui fazia o link
-// devolver 404 no clique seguinte.
-function ligacoes(ficheiro, id) {
-  const url = `/api/jobs/${encodeURIComponent(id)}`;
-  const limpar = () => fetch(url, { method: 'DELETE' }).catch(() => {});
-
-  const link = document.createElement('a');
-  link.className = 'dl';
-  link.href = `${url}/download`;
-  link.textContent = 'descarregar';
-  link.addEventListener('click', () => {
-    link.textContent = 'a descarregar…';
-    // Tempo para o browser pegar no ficheiro antes de o servidor o apagar.
-    setTimeout(limpar, 30_000);
-  });
-  ficheiro._ui.li.append(link);
-
-  const botao = document.createElement('button');
-  botao.className = 'limpar';
-  botao.type = 'button';
-  botao.textContent = 'apagar';
-  botao.title = 'Apagar este ficheiro do servidor';
-  botao.addEventListener('click', () => { limpar(); botao.remove(); link.remove(); });
-  ficheiro._ui.li.append(botao);
 }
 
 async function converter(ficheiro, destino) {

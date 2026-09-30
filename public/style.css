@@ -196,6 +196,9 @@ button.limpar:hover { color: var(--err); border-color: var(--err); }
   font-size: 0.9rem;
 }
 
+.zip-lote { margin: 1rem 0 0; }
+.zip-lote .dl { font-size: 0.9rem; }
+
 .note { margin-top: 1.25rem; color: var(--muted); font-size: 0.85rem; }
 
 /* Catálogo de formatos */

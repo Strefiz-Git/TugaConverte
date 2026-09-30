@@ -14,11 +14,12 @@
 - [ ] Construir a imagem Docker e converter um ficheiro de cada família: o `Dockerfile` ainda não foi testado, e nada do que corremos o prova. WSL não está instalado nesta máquina, e o Docker Desktop precisa dele.
 - [x] PDF → todas as páginas num ZIP, em dois passos (poppler desenha, 7-Zip junta).
 - [x] Consola por ficheiro: a linha de comando e o que o binário disse, a aparecer enquanto converte.
+- [x] Descarregar vários resultados num ZIP, com o escritor de ZIP em Node e sem dependências.
 
 ## A seguir
 
 - [ ] Descompactar um ZIP: extrair e converter o conteúdo, o que precisa de saída com vários ficheiros.
-- [ ] Conversão em lote: vários ficheiros com um formato de destino comum, descarregar tudo num ZIP.
+- [ ] Escolher o destino por ficheiro: hoje a UI escolhe um `saida` único para a entrada escolhida, por isso ficheiros de tipos diferentes à mesma vez não têm onde ir.
 - [ ] Motor de arquivos (zip/tar/7z) com descompactar e recomprimir.
 - [ ] Notificações de fim sem polling: SSE em `/api/jobs/:id/events`.
 - [ ] Opções por formato (qualidade do JPEG, páginas do PDF, bitrate do áudio).

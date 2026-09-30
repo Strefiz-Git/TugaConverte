@@ -2,7 +2,7 @@
 
 Conversor de ficheiros **sem limites**. Inspirado no CloudConvert, ao contrário dele: sem quotas, sem limite de tamanho, sem contas, sem analytics.
 
-Se tens um ficheiro e precisas dele noutro formato, mandas e recebes. Só isso.
+Se tens um ficheiro e precisas dele noutro formato, mandas e recebes. Só isso. Quando convertes vários, a interface oferece "descarregar os N resultados num ZIP".
 
 ## Como correr
 
@@ -84,6 +84,7 @@ Copiar `.env.example` para `.env` não é preciso: o servidor funciona sem nenhu
 | `POST` | `/api/jobs?to=<ext>` | `multipart/form-data` com o campo `file`. Devolve `202` e `{ id }` |
 | `GET` | `/api/jobs/:id` | `{ status, size, error, code, log }`, com `status` em `pending`, `running`, `done`, `error` |
 | `GET` | `/api/jobs/:id/download` | O ficheiro convertido |
+| `GET` | `/api/jobs/zip?ids=id1,id2` | Junta vários resultados num ZIP |
 | `DELETE` | `/api/jobs/:id` | Apaga o job e os seus ficheiros |
 
 ### Erros

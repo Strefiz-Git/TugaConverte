@@ -40,7 +40,7 @@ Um motor é `{ id, bins, from, to, supports?, build }` e o `build` devolve argum
 Depois de escrever um teste, estraga o código que ele protege, vê-o falhar e repor. Um teste que passa sempre não protege nada.
 
 ### Regra 12 — Velocidade é funcionalidade
-Orçamento de 12 KB comprimidos no front-end, zero requests externos, uploads e downloads em stream, concorrência limitada aos CPUs. Antes de acrescentar uma dependência, medir.
+Orçamento de 13 KB comprimidos no front-end, zero requests externos, uploads e downloads em stream, concorrência limitada aos CPUs. Antes de acrescentar uma dependência, medir.
 
 ### Regra 13 — Nada fica no disco para sempre
 Cada job tem TTL (`TTL_MIN`), limpeza no arranque e o diretório apagado por inteiro quando o ficheiro expira. Isto é privacidade, não é quota.

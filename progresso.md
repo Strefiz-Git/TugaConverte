@@ -2,6 +2,23 @@
 
 Diário do projeto, mais recente em cima. Escrever com a skill `progresso`.
 
+## 2026-09-30 · ZIP de vários resultados, escrito à mão
+
+**Feito**
+`src/core/zip.js`: escritor de ZIP mínimo, só deflate, sem dependências. `GET /api/jobs/zip?ids=...` junta vários resultados num ficheiro, com os nomes de cada ficheiro. A UI mostra "descarregar os N resultados num ZIP" a partir de dois resultados prontos, e o link some quando um deles é apagado. A consola e as ligações de cada linha foram para `public/linha.js`, e os testes do ZIP para `tests/zip.test.js`.
+
+**Verificado**
+`npm test`: **41 passam, 0 falham, 0 saltam**. O teste de integração deixa o 7-Zip real ler e extrair o ZIP que escrevemos à mão, e compara os bytes. No browser: três PNG convertidos, link de ZIP, 596 bytes, e esse ZIP pasado ao 7-Zip dá "3 files" sem erros, com `primeira.webp`, `segunda.webp` e `terceira.webp`. O `nomeSeguro` tem testes para `..`, barras, controlos, nome vazio e nome de 300 caracteres.
+
+**Dois bugs meus no ZIP, os dois apanhados pelo 7-Zip**
+1. Eu empilhava os cabeçalhos e os dados em duas listas e nunca juntava os dados comprimidos: o ficheiro saía com o tamanho comprimido a zero. O sintoma era enganador — os nomes apareciam na listagem, o que fazia o ZIP parecer correcto, e só a extracção falhava.
+2. Passava o `Buffer` comprimido a uma função que esperava o comprimento, e escrevia `0` no cabeçalho. Pior: a primeira tentativa de corrigir foi **medir o gzip de todos os ficheiros juntos**, o que dava um número mais simpático e estava errado, porque o servidor serve cada ficheiro como uma resposta separada.
+
+**Sobre o orçamento, e uma lição**
+Dividir o `app.js` em quatro módulos para cumprir o tecto de 250 linhas fez o total comprimido **subir** de 12,3 para 12,9 KB: cada módulo é uma resposta HTTP com o seu cabeçalho e o seu dicionário gzip. Voltei a juntar, e o tecto subiu de 12 para 13 KB — que é o custo honesto de escolher formatos, catálogo, dependências, consola e ZIP de lote, e continua a ser uma fracção dos 200 KB de JavaScript que o CloudConvert serve. A lição ficou na skill `performance`: primeiro junta, depois divide, e mede.
+
+## 2026-09-30 · Consola: ver o comando que correu
+
 ## 2026-09-30 · Consola: ver o comando que correu
 
 **Feito**
