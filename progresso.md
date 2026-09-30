@@ -2,6 +2,22 @@
 
 Diário do projeto, mais recente em cima. Escrever com a skill `progresso`.
 
+## 2026-09-30 · Catálogo de formatos por categoria
+
+**Feito**
+`src/catalogo.js` com as 7 famílias e os nomes legíveis (`docx` → Word, `jpg` → JPEG). `registry.catalogo()` devolve `{ total, categorias }` contando **só os motores ativos neste servidor**. `GET /api/catalogo`. `public/catalogo.js` desenha as contagens, filtra por categoria e deixa clicar num formato para o pôr como entrada. O `check` falha se um motor declarar um formato sem família no catálogo. O `app.js` passou as 250 linhas ao crescer, por isso a parte de rede foi para `public/api.js` e o mapa de códigos para `public/erros-ui.js`.
+
+**Verificado**
+`npm run check` (26,4 KB / 30 KB, 51 formatos declarados) e `npm test` (21 passam, 7 saltados). O guard do `check` morde: com `heic` no motor e fora do catálogo, dá "formato sem família no catálogo → imagemagick: heic". No browser, contra o servidor descartável: resumo "9 formatos em 3 categorias", filtro Imagens mostra só as 3 imagens, `aria-pressed` acompanha, e clicar em `.flac` põe FLAC como entrada com `accept=".flac"`.
+
+**Não verificado**
+A linha "Áudio" no catálogo de teste saiu sem acento: é a categoria do meu servidor descartável, não o catálogo real. O catálogo real nunca foi visto no browser porque esta máquina não tem nenhum binário e, sem motores, a secção esconde-se de propósito. As contagens reais (51 formatos, 7 categorias) só serão vistas depois de instalado.
+
+**Erro meu**
+Duas vezes nesta unidade: escrevi `Pintar` em maiúsculas no return de `mostrarCatalogo` (a UI rebentava com `Pintar is not defined`, apanhado no browser e não pelo `check`, porque `node --check` só valida sintaxe), e na primeira tentativa de provar o guard do `check` pus o formato mutado dentro do próprio catálogo, o que anulava o teste. Nenhuma das duas chegou ao commit.
+
+## 2026-09-30 · Erros da API com `code`, e um teste que não mordia
+
 ## 2026-09-30 · Erros da API com `code`, e um teste que não mordia
 
 **Feito**

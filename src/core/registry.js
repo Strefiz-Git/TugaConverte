@@ -1,5 +1,6 @@
 // Decide qual motor trata cada par. `has` é assíncrono e injectado.
 import { hasBin } from './bins.js';
+import { CATEGORIAS, familia, nome } from '../catalogo.js';
 
 export async function createRegistry({ engines, has = hasBin } = {}) {
   const active = [];
@@ -33,6 +34,33 @@ export async function createRegistry({ engines, has = hasBin } = {}) {
         }
       }
       return matrix;
+    },
+
+    // Catálogo por família, só com o que este servidor consegue mesmo fazer:
+    // um motor sem binário não entra, senão a contagem é uma mentira.
+    catalogo() {
+      const porFamilia = new Map();
+      const add = (extension) => {
+        const f = familia(extension);
+        if (!f) return;
+        if (!porFamilia.has(f)) porFamilia.set(f, new Set());
+        porFamilia.get(f).add(extension);
+      };
+      for (const engine of active) engine.from.forEach(add);
+
+      const categorias = CATEGORIAS
+        .filter((c) => porFamilia.has(c.id))
+        .map((c) => {
+          const extensoes = [...porFamilia.get(c.id)].sort();
+          return {
+            id: c.id,
+            nome: c.nome,
+            total: extensoes.length,
+            extensoes: extensoes.map((e) => ({ ext: e, nome: nome(e) })),
+          };
+        });
+
+      return { total: categorias.reduce((s, c) => s + c.total, 0), categorias };
     },
   };
 }

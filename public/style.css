@@ -176,6 +176,70 @@ button.limpar:hover { color: var(--err); border-color: var(--err); }
 
 .note { margin-top: 1.25rem; color: var(--muted); font-size: 0.85rem; }
 
+/* Catálogo de formatos */
+.catalogo { margin-top: 2.5rem; border-top: 1px solid var(--line); padding-top: 1.5rem; }
+
+.catalogo h2 { margin: 0 0 0.5rem; font-size: 1.05rem; }
+
+.resumo { margin: 0 0 1rem; color: var(--muted); font-size: 0.9rem; }
+
+.familias { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+.familia {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.6rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--muted);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.familia:hover { color: var(--fg); border-color: var(--accent); }
+.familia.ativa { color: var(--accent); border-color: var(--accent); font-weight: 600; }
+.familia:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.conta { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.75rem; opacity: 0.75; }
+
+.formatos {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+  gap: 0.4rem;
+}
+
+.formato {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.5rem 0.6rem;
+  text-align: left;
+  font: inherit;
+  background: var(--card);
+  color: var(--fg);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.formato:hover { border-color: var(--accent); }
+.formato:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.formato b {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  color: var(--accent);
+}
+
+.formato span { font-size: 0.75rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 footer { margin-top: 2.5rem; color: var(--muted); font-size: 0.8rem; text-align: center; }
 
 /* Diálogo de formatos: <dialog> nativo dá Escape, foco e modalidade de graça. */

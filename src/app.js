@@ -35,6 +35,11 @@ export function buildApp({ registry, jobs, queue, runFn, config }) {
     return registry.formats();
   });
 
+  app.get('/api/catalogo', async (_req, reply) => {
+    reply.header('cache-control', 'public, max-age=30');
+    return registry.catalogo();
+  });
+
   app.get('/api/health', async () => ({
     ok: true,
     engines: registry.engines.map((e) => e.id),

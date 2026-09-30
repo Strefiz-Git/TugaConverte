@@ -58,6 +58,31 @@ test('formats() só oferece destinos que existem para a origem', () => {
   assert.ok(matrix.docx.includes('pdf'));
 });
 
+test('o catálogo conta por família e só o que está ativo', async () => {
+  const catalogo = all.catalogo();
+  assert.equal(catalogo.total, catalogo.categorias.reduce((s, c) => s + c.total, 0));
+
+  const imagem = catalogo.categorias.find((c) => c.id === 'imagem');
+  assert.equal(imagem.nome, 'Imagens');
+  assert.ok(imagem.total >= 9);
+  const extensoes = imagem.extensoes.map((f) => f.ext);
+  assert.ok(extensoes.includes('png') && extensoes.includes('svg'));
+  // Nomes legíveis onde valem a pena, e nada inventado.
+  assert.equal(imagem.extensoes.find((f) => f.ext === 'jpg').nome, 'JPEG');
+  assert.equal(imagem.extensoes.find((f) => f.ext === 'png').nome, 'PNG');
+
+  // Um motor sem binário não pode entrar no catálogo: a contagem seria mentira.
+  const soImagem = await createRegistry({ engines, has: async (b) => b === 'convert' || b === 'magick' });
+  const parcial = soImagem.catalogo();
+  assert.deepEqual(parcial.categorias.map((c) => c.id), ['imagem']);
+  assert.equal(parcial.total, 10);
+});
+
+test('um formato sem família não aparece no catálogo', async () => {
+  const registry = await registryWith([fakeEngine({ from: ['x'], to: ['y'] })]);
+  assert.deepEqual(registry.catalogo(), { total: 0, categorias: [] });
+});
+
 test('suporta() do motor falso decide', async () => {
   const engine = fakeEngine({ from: ['x'], to: ['y', 'z'] });
   const registry = await registryWith([engine]);

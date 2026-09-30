@@ -9,7 +9,8 @@
 - [ ] Construir a imagem Docker e converter um ficheiro de cada família (docx→pdf, png→jpg, mp3→wav, md→epub, pdf→png).
 - [x] Escolher os formatos antes do ficheiro, com botão de troca e diálogo com filtro.
 - [x] Erros da API com `code` para além da mensagem (`{ error, code, campos? }`).
-- [ ] Catálogo de formatos por categoria, com contagens, alimentado por dados do servidor (categorias declaradas nos motores, nunca escritas à mão no `public/`).
+- [x] Catálogo de formatos por categoria, com contagens, alimentado por dados do servidor (categorias declaradas nos motores, nunca escritas à mão no `public/`).
+- [ ] Ajudar a instalar as dependências: página de diagnóstico que diz, por motor, que binários faltam e o comando exacto para o sistema onde o servidor corre, com botão de copiar. Preferir pelo site a um ficheiro solto, e dizer sempre qual é o ficheiro.
 
 ## A seguir
 

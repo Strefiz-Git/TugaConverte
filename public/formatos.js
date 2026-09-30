@@ -56,7 +56,7 @@ export function createFormatos({ matrix, onChange }) {
       botao.type = 'button';
       botao.className = 'opcao';
       botao.textContent = format.toUpperCase();
-      botao.addEventListener('click', () => escolher(format));
+      botao.addEventListener('click', () => escolherDaLista(format));
       li.append(botao);
       el.lista.append(li);
     }
@@ -72,17 +72,24 @@ export function createFormatos({ matrix, onChange }) {
     el.filtro.focus();
   }
 
-  function escolher(format) {
-    if (lado === 'entrada') {
-      if (format === entrada) return;
+  // O lado é sempre explícito: o diálogo passa o seu, e quem chama de fora
+  // passa o que quer. Nunca inferir do último diálogo aberto.
+  function aplicar(qual, format) {
+    if (qual === 'entrada') {
+      if (format === entrada) return false;
       entrada = format;
       // Um destino que já não sirva para a nova entrada tem de mudar.
       if (!destinos().includes(saida)) saida = '';
     } else {
       saida = format;
     }
-    el.dlg.close();
     pintar();
+    return true;
+  }
+
+  function escolherDaLista(format) {
+    if (!aplicar(lado, format)) return;
+    el.dlg.close();
   }
 
   function trocar() {
@@ -109,5 +116,12 @@ export function createFormatos({ matrix, onChange }) {
     pronto: () => Boolean(entrada && saida),
     trocar,
     podeTrocar,
+    // Escolher por fora, a partir do catálogo, sem passar pelo diálogo.
+    // Recusa o que o catálogo não oferece, para a UI não poder inventar pares.
+    escolher(qual, format) {
+      const lista = qual === 'saida' ? destinos() : origens();
+      if (!lista.includes(format)) return false;
+      return aplicar(qual, format);
+    },
   };
 }

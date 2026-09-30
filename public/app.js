@@ -1,5 +1,7 @@
 // UI sem framework. Os formatos vêm sempre de /api/formats (Regra 9).
 import { createFormatos } from '/formatos.js';
+import { mostrarCatalogo } from '/catalogo.js';
+import { criarJob, esperar, explicarErro } from '/api.js';
 
 const $ = (s) => document.querySelector(s);
 const drop = $('#drop');
@@ -8,11 +10,13 @@ const list = $('#list');
 const aviso = $('#aviso');
 const tituloDrop = $('#dropTitulo');
 const subDrop = $('#dropSub');
+const zonaCatalogo = $('#catalogo-zona');
 
 let matrix = {};
 let ficheiros = [];
 let semMotores = false;
 let formatos;
+let catalogo;
 
 const ext = (nome) => nome.slice(nome.lastIndexOf('.') + 1).toLowerCase();
 
@@ -113,53 +117,6 @@ function aceitar(recebidos) {
   }
 }
 
-// XMLHttpRequest e não fetch: só o XHR dá progresso de envio.
-function enviar(ficheiro, destino) {
-  return new Promise((resolve, reject) => {
-    const form = new FormData();
-    form.append('file', ficheiro);
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', `/api/jobs?to=${encodeURIComponent(destino)}`);
-    xhr.upload.onprogress = (e) => {
-      if (!e.lengthComputable) return;
-      ficheiro._ui.barra.hidden = false;
-      ficheiro._ui.barra.value = (e.loaded / e.total) * 100;
-      setEstado(ficheiro, `a enviar ${Math.round((e.loaded / e.total) * 100)}%`);
-    };
-    xhr.onload = () => {
-      let corpo = {};
-      try { corpo = JSON.parse(xhr.responseText); } catch { /* resposta não-JSON */ }
-      if (xhr.status === 202) return resolve(corpo.id);
-      // O `code` deixa a UI decidir; a mensagem é o que se mostra.
-      const erro = new Error(corpo.error || `erro ${xhr.status}`);
-      erro.code = corpo.code || null;
-      reject(erro);
-    };
-    xhr.onerror = () => reject(new Error('falha de rede'));
-    xhr.send(form);
-  });
-}
-
-async function esperar(id) {
-  for (;;) {
-    const job = await fetch(`/api/jobs/${encodeURIComponent(id)}`).then((r) => r.json());
-    if (job.status === 'done' || job.status === 'error') return job;
-    await new Promise((r) => setTimeout(r, 700));
-  }
-}
-
-// O `code` permite uma mensagem própria; o texto do servidor é o último
-// recurso, para nunca se perder um erro que ainda não sabemos prever.
-const POR_CODE = {
-  FILE_TOO_LARGE: 'O ficheiro é maior do que este servidor aceita.',
-  UNKNOWN_FORMAT: 'Este servidor não faz essa conversão.',
-  CONVERSION_FAILED: 'A conversão falhou. O ficheiro pode estar corrompido.',
-};
-
-function explicar(err) {
-  return (err.code && POR_CODE[err.code]) || err.message;
-}
-
 // O job só pode ser apagado depois de descarregado: apagar aqui fazia o link
 // devolver 404 no clique seguinte.
 function ligacoes(ficheiro, id) {
@@ -189,12 +146,16 @@ function ligacoes(ficheiro, id) {
 async function converter(ficheiro, destino) {
   try {
     setEstado(ficheiro, 'a converter');
-    const job = await esperar(await enviar(ficheiro, destino));
+    const job = await esperar(await criarJob(ficheiro, destino, (fraccao) => {
+      ficheiro._ui.barra.hidden = false;
+      ficheiro._ui.barra.value = fracao * 100;
+      setEstado(ficheiro, `a enviar ${Math.round(fraccao * 100)}%`);
+    }));
     if (job.status === 'error') throw new Error(job.error || 'conversão falhou');
     setEstado(ficheiro, `pronto · ${tamanho(job.size)}`, 'ok');
     ligacoes(ficheiro, job.id);
   } catch (err) {
-    setEstado(ficheiro, explicar(err), 'err');
+    setEstado(ficheiro, explicarErro(err), 'err');
   }
 }
 
@@ -229,7 +190,22 @@ picker.addEventListener('change', () => converterTodos([...picker.files]));
   drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
 drop.addEventListener('drop', (e) => converterTodos([...(e.dataTransfer?.files || [])]));
 
-await carregarFormatos();
-await estado();
-formatos = createFormatos({ matrix, onChange: rotular });
-rotular();
+// Arranque: Formats, saude do servidor, e o catalogo se houver algo a mostrar.
+async function arrancar() {
+  await Promise.all([carregarFormatos(), estado()]);
+  formatos = createFormatos({ matrix, onChange: rotular });
+  rotular();
+
+  catalogo = mostrarCatalogo({
+    raiz: $('#catalogo'),
+    aoEscolher: (ext) => formatos.escolher('entrada', ext),
+  });
+  const dados = await fetch('/api/catalogo').then((r) => r.json()).catch(() => null);
+  // Com zero motores ativos um catálogo vazio é só barulho: escondemos a secção.
+  if (dados && dados.total) {
+    zonaCatalogo.hidden = false;
+    catalogo.definir(dados);
+  }
+}
+
+await arrancar();

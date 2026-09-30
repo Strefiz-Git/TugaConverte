@@ -169,6 +169,15 @@ test('descarregar antes de estar pronto dá 404', async (t) => {
   assert.equal((await app.inject({ url: '/api/jobs/nao-existe/download' })).statusCode, 404);
 });
 
+test('/api/catalogo devolve as famílias com contagens', async (t) => {
+  const { app } = await setup();
+  t.after(() => app.close());
+  const res = await app.inject({ url: '/api/catalogo' });
+  assert.equal(res.statusCode, 200);
+  // O motor falso diz "a" -> "b", que não estão catalogados: nada a mostrar.
+  assert.deepEqual(res.json(), { total: 0, categorias: [] });
+});
+
 test('/api/formats e /api/health respondem', async (t) => {
   const { app } = await setup();
   t.after(() => app.close());

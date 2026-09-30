@@ -39,6 +39,7 @@ O que está no HTML da página deles e o que muda o nosso desenho:
 - **Thumbnails** como tarefa separada do mesmo job, em vez de um motor à parte.
 - **Motor de arquivos com descompactar e recomprimir.** Já no TODO; o CloudConvert tem 39 formatos de arquivo, é a maior categoria depois das imagens.
 - **Não fazer `execute-commands`.** Registado para não voltarmos a discuti-lo: execução arbitrária no servidor não é uma conversão de ficheiros.
+- **Ajudar a instalar as dependências, pelo site.** **Pedido do utilizador.** Hoje o aviso diz "instala ffmpeg, ImageMagick..." e não dá mais ajuda nenhuma; a primeira coisa que trava um utilizador é esta. A versão honesta e útil: uma página de diagnóstico que liste, por motor, os binários em falta e o comando exacto para o sistema onde o servidor corre (apt, brew, winget, choco), com botão de copiar. **Não** instalar pelo site: exigiria root no contentor, e um `curl | sh` é exactamente o que um site de conversão de ficheiros não deve pedir. Um script descarregável que se lê antes de correr é aceitável; instalar sem o utilizador ler, não.
 
 - **libvips em vez de ImageMagick.** Way mais rápido em imagens grandes. Medir antes de trocar: converter o mesmo PNG de 4000×3000 nos dois, 20 vezes, e comparar tempo total e memória.
 - **unoserver para o LibreOffice.** O arranque a frio custa segundos por job; um processo persistente corta isso. Medir: tempo de docx→pdf no primeiro job e no décimo.

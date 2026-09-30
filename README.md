@@ -76,6 +76,7 @@ Copiar `.env.example` para `.env` não é preciso: o servidor funciona sem nenhu
 | Método | Rota | O que faz |
 |---|---|---|
 | `GET` | `/api/formats` | Matriz `{ origem: [destinos] }` |
+| `GET` | `/api/catalogo` | Formatos por família, com contagens, só dos motores ativos |
 | `GET` | `/api/health` | Motores ativos, estado da fila e `ttlMin` |
 | `POST` | `/api/jobs?to=<ext>` | `multipart/form-data` com o campo `file`. Devolve `202` e `{ id }` |
 | `GET` | `/api/jobs/:id` | `{ status, size, error }`, com `status` em `pending`, `running`, `done`, `error` |

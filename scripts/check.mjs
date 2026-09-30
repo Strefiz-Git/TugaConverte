@@ -67,6 +67,19 @@ for (const m of index.matchAll(/from '\.\/(\w+)\.js'/g)) {
   if (/\bexec\(|shell:\s*true/.test(src)) fail(`${file} usa shell: proibido (Regra 7)`);
 }
 
+// Nenhum formato pode ficar sem família no catálogo, senão a página de catálogo
+// esconde um formato que o servidor aceita (Regra 9).
+const { familia } = await import(new URL('../src/catalogo.js', import.meta.url));
+const { default: engines } = await import(new URL('../src/engines/index.js', import.meta.url));
+const semFamilia = new Set();
+for (const motor of engines) {
+  for (const ext of [...motor.from, ...motor.to]) {
+    if (!familia(ext)) semFamilia.add(`${motor.id}: ${ext}`);
+  }
+}
+for (const caso of semFamilia) fail(`formato sem família no catálogo → ${caso}`);
+console.log(`catálogo: ${engines.reduce((s, m) => s + m.from.length, 0)} formatos declarados`);
+
 if (problems.length) {
   console.error(`\ncheck falhou (${problems.length}):`);
   for (const p of problems) console.error(`  · ${p}`);
