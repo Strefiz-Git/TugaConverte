@@ -88,6 +88,31 @@ function setEstado(ficheiro, texto, classe = '') {
   estado.className = `estado ${classe}`;
 }
 
+// A consola: a linha de comando e o que o binário disse. Não tem nada do
+// utilizador, porque em disco o ficheiro é `input.<ext>`.
+function consola(ficheiro) {
+  const { li } = ficheiro._ui;
+  if (li.querySelector('.consola')) return li.querySelector('.consola pre');
+
+  const detalhes = document.createElement('details');
+  detalhes.className = 'consola';
+  const resumo = document.createElement('summary');
+  resumo.textContent = 'ver o que o servidor correu';
+  const saida = document.createElement('pre');
+  detalhes.append(resumo, saida);
+  li.append(detalhes);
+  return saida;
+}
+
+function pintarConsola(ficheiro, log) {
+  if (!log) return;
+  const alvo = consola(ficheiro);
+  if (alvo.textContent === log) return;
+  alvo.textContent = log;
+  // Com o painel aberto, descer sozinho evita ter de arrastar a barra.
+  if (alvo.parentElement.open) alvo.scrollTop = alvo.scrollHeight;
+}
+
 function aceitar(recebidos) {
   const { entrada: esperada } = formatos.get();
   let aceites = 0;
@@ -152,7 +177,7 @@ async function converter(ficheiro, destino) {
       ficheiro._ui.barra.hidden = false;
       ficheiro._ui.barra.value = fracao * 100;
       setEstado(ficheiro, `a enviar ${Math.round(fraccao * 100)}%`);
-    }));
+    }), (visto) => pintarConsola(ficheiro, visto.log));
     if (job.status === 'error') throw new Error(job.error || 'conversão falhou');
     setEstado(ficheiro, `pronto · ${tamanho(job.size)}`, 'ok');
     ligacoes(ficheiro, job.id);

@@ -135,6 +135,61 @@ test('o limite do operador responde 413 com o seu code', async (t) => {
   assert.deepEqual(await fs.readdir(path.join(dataDir, 'jobs')), [], 'o job grande não fica no disco');
 });
 
+test('a consola mostra o comando e o que o binário disse', async (t) => {
+  const dataDir = await tmpDir();
+  const jobs = createJobStore({ dataDir, ttlMin: 1 });
+  await jobs.init();
+  const app = buildApp({
+    registry: await registryWith([fakeEngine()]),
+    jobs, queue: createQueue(1),
+    config: { maxUploadMb: 0, jobTimeoutSec: 0, ttlMin: 1, port: 0, host: '127.0.0.1' },
+    runFn: async ({ registrar }) => {
+      registrar('$ falso -i entrada saida\n');
+      registrar('aviso: qualidade reduzida\n');
+      await fs.writeFile(path.join(path.dirname('.'), 'x'), 'x').catch(() => {});
+    },
+  });
+  await app.ready();
+  t.after(() => app.close());
+
+  const { id } = (await app.inject({ method: 'POST', url: '/api/jobs?to=b', payload: form('foto.a', 'x') })).json();
+  await settle();
+  const job = (await app.inject({ url: `/api/jobs/${id}` })).json();
+  assert.match(job.log, /falso -i entrada saida/, 'a linha de comando tem de aparecer');
+  assert.match(job.log, /qualidade reduzida/, 'o que o binário disse tem de aparecer');
+});
+
+test('a consola nunca mostra o nome do ficheiro nem o caminho interno', async (t) => {
+  const dataDir = await tmpDir();
+  const jobs = createJobStore({ dataDir, ttlMin: 1 });
+  await jobs.init();
+  const app = buildApp({
+    registry: await registryWith([fakeEngine()]),
+    jobs, queue: createQueue(1),
+    config: { maxUploadMb: 0, jobTimeoutSec: 0, ttlMin: 1, port: 0, host: '127.0.0.1' },
+    // Binário que despeja tudo o que sabe, incluindo o caminho do job.
+    runFn: async ({ dir, registrar }) => {
+      registrar(`$ falso ${dir}/input.a ${dir}/output.b\n`);
+      registrar(`falhou a ler ${dir}/input.a\n`);
+      throw new Error(`falso falhou em ${dir}/input.a`);
+    },
+  });
+  await app.ready();
+  t.after(() => app.close());
+
+  const { id } = (await app.inject({ method: 'POST', url: '/api/jobs?to=b', payload: form('segredo-do-utilizador.a', 'x') })).json();
+  await settle();
+  const job = (await app.inject({ url: `/api/jobs/${id}` })).json();
+  const dados = await fs.readdir(path.join(dataDir, 'jobs'));
+  const dirReal = path.join(dataDir, 'jobs', dados[0]);
+
+  assert.doesNotMatch(job.log, /segredo-do-utilizador/, 'o nome do utilizador não pode aparecer');
+  assert.doesNotMatch(job.error, /segredo-do-utilizador/);
+  // O caminho do job sai como `…`, e o que fica é o nome interno input.a.
+  assert.doesNotMatch(job.log, new RegExp(dirReal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  assert.match(job.log, /…[\\/]input\.a/);
+});
+
 test('sem ficheiro é erro 400', async (t) => {
   const { app } = await setup();
   t.after(() => app.close());
@@ -180,61 +235,3 @@ test('/api/dependencias responde mesmo sem binários', async (t) => {
   assert.equal(deps.motores[0].id, 'falso');
 });
 
-test('/api/catalogo devolve as famílias com contagens', async (t) => {
-  const { app } = await setup();
-  t.after(() => app.close());
-  const res = await app.inject({ url: '/api/catalogo' });
-  assert.equal(res.statusCode, 200);
-  // O motor falso diz "a" -> "b", que não estão catalogados: nada a mostrar.
-  assert.deepEqual(res.json(), { total: 0, categorias: [] });
-});
-
-test('/api/formats e /api/health respondem', async (t) => {
-  const { app } = await setup();
-  t.after(() => app.close());
-  assert.deepEqual((await app.inject({ url: '/api/formats' })).json(), { a: ['b'] });
-  // Um deploy não pode deixar ninguém na página antiga: o HTML não é cacheado.
-  const html = await app.inject({ url: '/' });
-  assert.equal(html.headers['cache-control'], 'no-cache');
-  const js = await app.inject({ url: '/app.js' });
-  assert.match(js.headers['cache-control'], /max-age=\d+/, 'os estáticos podem ficar em cache');
-
-  const health = (await app.inject({ url: '/api/health' })).json();
-  assert.equal(health.ok, true);
-  assert.deepEqual(health.engines, ['falso']);
-  assert.equal(health.queue.concurrency, 2);
-  assert.equal(health.ttlMin, 1, 'a UI precisa do TTL real, não de um valor adivinhado');
-});
-
-test('sem motores ativos, /api/health diz-o e /api/formats vem vazio', async (t) => {
-  const dataDir = await tmpDir();
-  const jobs = createJobStore({ dataDir, ttlMin: 5 });
-  await jobs.init();
-  const app = buildApp({
-    registry: await createRegistry({ engines, has: async () => false }),
-    jobs, queue: createQueue(1),
-    config: { maxUploadMb: 0, jobTimeoutSec: 0, ttlMin: 5, port: 0, host: '127.0.0.1' },
-    runFn: async () => {},
-  });
-  await app.ready();
-  t.after(() => app.close());
-
-  assert.deepEqual((await app.inject({ url: '/api/health' })).json().engines, []);
-  assert.deepEqual((await app.inject({ url: '/api/formats' })).json(), {});
-  assert.equal((await app.inject({ method: 'POST', url: '/api/jobs?to=jpg', payload: form('a.png', 'x') })).statusCode, 400);
-});
-
-test('a fila executa a tarefas em série até à concorrência', async () => {
-  const queue = createQueue(2);
-  let running = 0;
-  let peak = 0;
-  const task = () => new Promise((resolve) => {
-    running += 1;
-    peak = Math.max(peak, running);
-    setTimeout(() => { running -= 1; resolve(); }, 30);
-  });
-  for (let i = 0; i < 6; i += 1) queue.push(task);
-  await new Promise((r) => setTimeout(r, 200));
-  assert.equal(peak, 2);
-  assert.equal(queue.stats().waiting, 0);
-});

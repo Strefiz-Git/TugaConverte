@@ -33,6 +33,9 @@ for (const file of codeFiles) {
 }
 
 // Regra 12: front-end no orçamento. Mede o comprimido, que é o que viaja.
+// Ficheiro a ficheiro, como o servidor serve: cada um é uma resposta
+// separada, com o seu próprio dicionário. Comprimir tudo junto dava um
+// número optimista que ninguém vive.
 const uiFiles = walk('public', '.js').concat(walk('public', '.css')).concat(walk('public', '.html'));
 const uiBytes = uiFiles.reduce((sum, f) => sum + fs.statSync(path.join(ROOT, f)).size, 0);
 const uiGzip = uiFiles.reduce((sum, f) => {

@@ -82,7 +82,7 @@ Copiar `.env.example` para `.env` não é preciso: o servidor funciona sem nenhu
 | `GET` | `/api/dependencias` | Por motor: o que falta e o comando de instalação de cada sistema |
 | `GET` | `/api/health` | Motores ativos, estado da fila e `ttlMin` |
 | `POST` | `/api/jobs?to=<ext>` | `multipart/form-data` com o campo `file`. Devolve `202` e `{ id }` |
-| `GET` | `/api/jobs/:id` | `{ status, size, error }`, com `status` em `pending`, `running`, `done`, `error` |
+| `GET` | `/api/jobs/:id` | `{ status, size, error, code, log }`, com `status` em `pending`, `running`, `done`, `error` |
 | `GET` | `/api/jobs/:id/download` | O ficheiro convertido |
 | `DELETE` | `/api/jobs/:id` | Apaga o job e os seus ficheiros |
 
@@ -106,6 +106,8 @@ curl -s -o foto.jpg "http://localhost:3000/api/jobs/$ID/download"
 ```
 
 O `id` é um UUID: quem o tem é quem pode descarregar. Os ficheiros são apagados `TTL_MIN` minutos depois. A UI mostra um botão "apagar" por linha, que apaga o ficheiro de imediato.
+
+O campo `log` traz a linha de comando e o que o binário disse, que a interface mostra num painel "ver o que o servidor correu". Não tem nada do teu ficheiro dentro: em disco o input chama-se `input.<ext>` e o output `output.<ext>`, e o caminho do job sai limpo. Podes usá-lo para depurar uma conversão que correu mal.
 
 ## Porquê Node.js
 

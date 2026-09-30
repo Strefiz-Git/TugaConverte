@@ -12,6 +12,8 @@ import { CODIGO, falha } from './core/erros.js';
 
 const PUBLIC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
 const EXT = /^[a-z0-9]{1,10}$/;
+// Tecto da consola, para um binário falante não encher a memória.
+const MAX_LOG = 16 * 1024;
 
 export function buildApp({ registry, jobs, queue, runFn, config }) {
   const app = Fastify({ logger: false, requestTimeout: 0, bodyLimit: 1024 * 1024 });
@@ -19,13 +21,13 @@ export function buildApp({ registry, jobs, queue, runFn, config }) {
 
   app.register(compress);
   app.register(multipart, { limits: { fileSize: limit, files: 1 } });
-  // Os estáticos podem ficar em cache, o HTML não: com `maxAge` em tudo, um
-  // deploy deixava os utilizadores na página antiga durante 10 minutos.
   // `cacheControl: false` para o plugin não escrever por cima do nosso header.
   app.register(fastifyStatic, {
     root: PUBLIC,
     cacheControl: false,
     setHeaders: (res, file) => {
+      // index.html nunca em cache: com `maxAge` em tudo, um deploy deixava
+      // os utilizadores na página antiga. O resto pode ficar 10 minutos.
       res.setHeader('cache-control', file.endsWith('.html') ? 'no-cache' : 'public, max-age=600');
     },
   });
@@ -79,8 +81,13 @@ export function buildApp({ registry, jobs, queue, runFn, config }) {
 
     queue.push(async () => {
       job.status = 'running';
+      // O log não cresce sem limite: um binário que despeja erros não pode
+      // encher a memória do servidor.
+      const registrar = (texto) => {
+        if (job.log.join('').length < MAX_LOG) job.log.push(texto.split(job.dir).join('…'));
+      };
       try {
-        const out = await convert({ engine, runFn, dir: job.dir, from, to, timeoutSec: config.jobTimeoutSec });
+        const out = await convert({ engine, runFn, dir: job.dir, from, to, timeoutSec: config.jobTimeoutSec, registrar });
         job.size = (await fs.promises.stat(out)).size;
         job.status = 'done';
       } catch (err) {
@@ -97,7 +104,16 @@ export function buildApp({ registry, jobs, queue, runFn, config }) {
   app.get('/api/jobs/:id', async (req, reply) => {
     const job = jobs.get(req.params.id);
     if (!job) return falha(reply, 404, CODIGO.JOB_DESCONHECIDO, 'Job não encontrado.');
-    return { id: job.id, status: job.status, size: job.size, error: job.error, code: job.code };
+    return {
+      id: job.id,
+      status: job.status,
+      size: job.size,
+      error: job.error,
+      code: job.code,
+      // A consola: a linha de comando e o que o binário disse. É a prova
+      // visível de que o servidor não está a fazer nada por trás.
+      log: job.log.join(''),
+    };
   });
 
   app.get('/api/jobs/:id/download', async (req, reply) => {

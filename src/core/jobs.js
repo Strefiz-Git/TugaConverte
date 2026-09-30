@@ -16,7 +16,17 @@ export function createJobStore({ dataDir, ttlMin = 120 }) {
       const id = randomUUID();
       const dir = path.join(root, id);
       await fs.mkdir(dir, { recursive: true });
-      const job = { id, dir, from, to, name, status: 'pending', size: 0, error: null, code: null, at: Date.now() };
+      const job = {
+        id, dir, from, to, name,
+        status: 'pending',
+        size: 0,
+        error: null,
+        code: null,
+        // A consola: a linha de comando e o que o binário disse. Nada do
+        // utilizador entra aqui, porque em disco é tudo `input.<ext>`.
+        log: [],
+        at: Date.now(),
+      };
       jobs.set(id, job);
       return job;
     },

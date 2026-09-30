@@ -8,7 +8,7 @@ const MAX_ERR = 800;
 // os streams fecham) ficava à espera para sempre.
 const SAIR = 150;
 
-export function run({ cmd, args, dir, timeoutSec = 0 }) {
+export function run({ cmd, args, dir, timeoutSec = 0, registrar }) {
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, args, {
       cwd: dir,
@@ -33,8 +33,16 @@ export function run({ cmd, args, dir, timeoutSec = 0 }) {
     };
 
     child.stderr.on('data', (chunk) => {
-      if (err.length < MAX_ERR) err += chunk.toString('utf8').slice(0, MAX_ERR);
+      const texto = chunk.toString('utf8');
+      // O log vai para a consola da interface, por isso chega cada pedaço.
+      if (registrar) registrar(texto);
+      if (err.length < MAX_ERR) err += texto.slice(0, MAX_ERR);
     });
+
+    // A linha de comando é a informação mais útil de todas: mostra exactamente
+    // o que correu. Não tem nada do utilizador, porque em disco o input é
+    // `input.<ext>` e o output `output.<ext>` (Regra 8).
+    if (registrar) registrar(`$ ${[cmd, ...args].join(' ')}\n`);
 
     child.on('error', (e) => {
       if (!acabou) terminar(127, null);

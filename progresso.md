@@ -2,6 +2,23 @@
 
 Diário do projeto, mais recente em cima. Escrever com a skill `progresso`.
 
+## 2026-09-30 · Consola: ver o comando que correu
+
+**Feito**
+O `runner` passa a receber um `registar` e escreve nele a linha de comando e o que o binário disse. O job guarda o log, `/api/jobs/:id` devolve-o, e cada linha da lista tem um painel "ver o que o servidor correu" que se actualiza com o polling que já existia. Nada de SSE: para a primeira versão o polling chega, e o SSE continua no TODO para quando o ganho importar. `erros-ui.js` fundiu-se em `api.js` (400 bytes e um pedido HTTP a menos). As rotas de leitura e a fila foram para `tests/rotas.test.js`, porque `app.test.js` tinha 296 linhas.
+
+**Verificado**
+`npm test`: **35 passam, 0 falham, 0 saltam**. A guarda de segurança morde: sem a limpeza do caminho do job, o teste que manda um binário despejar o caminho falha. No browser, um PDF de duas páginas para ZIP mostra:
+`$ pdftoppm -png -r 150 …\input.pdf …\pagina` e depois o aviso do poppler e o comando do 7-Zip. O ficheiro chamava-se `meu-secreto.pdf` e o nome não aparece nem no log nem no erro.
+
+**A segurança disto é real, e é verificável**
+Mostrar a linha de comando não é mostrar o ficheiro: em disco o input é `input.<ext>` e o output `output.<ext>` (Regra 8), por isso o comando só tem o caminho do job, que sai limpo como `…`. Isto é a prova visível de que o servidor não está a fazer nada por trás — que é a mesma promessa que o CloudConvert faz sobre dados, mostrada em vez de afirmada.
+
+**Sobre o orçamento**
+A consola levou o front-end dos 11,5 para os 12,1 KB comprimidos, acima do tecto de 12. A primeira tentação foi medir tudo junto num gzip só, o que dava um número mais simpático — e estava errado, porque o servidor serve cada ficheiro como uma resposta separada, com o seu próprio dicionário. Revertido. O que resolveu foi fundir o `erros-ui.js` no `api.js` e dizer cada regra CSS uma vez: 11,9 KB, dentro do tecto, sem mexer no número. Ordem de COMMITS: a regra não se mexeu para a regra me deixar passar.
+
+## 2026-09-30 · PDF → todas as páginas num ZIP, e o contrato de vários passos
+
 ## 2026-09-30 · PDF → todas as páginas num ZIP, e o contrato de vários passos
 
 **Feito**

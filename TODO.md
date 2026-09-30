@@ -13,6 +13,7 @@
 - [x] Converter ficheiros reais de ponta a ponta pelo browser: txt→pdf, png→webp e vários ficheiros de uma vez.
 - [ ] Construir a imagem Docker e converter um ficheiro de cada família: o `Dockerfile` ainda não foi testado, e nada do que corremos o prova. WSL não está instalado nesta máquina, e o Docker Desktop precisa dele.
 - [x] PDF → todas as páginas num ZIP, em dois passos (poppler desenha, 7-Zip junta).
+- [x] Consola por ficheiro: a linha de comando e o que o binário disse, a aparecer enquanto converte.
 
 ## A seguir
 
