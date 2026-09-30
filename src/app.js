@@ -18,7 +18,16 @@ export function buildApp({ registry, jobs, queue, runFn, config }) {
 
   app.register(compress);
   app.register(multipart, { limits: { fileSize: limit, files: 1 } });
-  app.register(fastifyStatic, { root: PUBLIC, maxAge: '10m' });
+  // Os estáticos podem ficar em cache, o HTML não: com `maxAge` em tudo, um
+  // deploy deixava os utilizadores na página antiga durante 10 minutos.
+  // `cacheControl: false` para o plugin não escrever por cima do nosso header.
+  app.register(fastifyStatic, {
+    root: PUBLIC,
+    cacheControl: false,
+    setHeaders: (res, file) => {
+      res.setHeader('cache-control', file.endsWith('.html') ? 'no-cache' : 'public, max-age=600');
+    },
+  });
 
   app.get('/api/formats', async (_req, reply) => {
     reply.header('cache-control', 'public, max-age=30');

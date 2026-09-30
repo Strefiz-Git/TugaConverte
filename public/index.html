@@ -15,16 +15,27 @@
 </header>
 
 <main>
-  <div id="drop" tabindex="0" role="button" aria-label="Escolher ou largar ficheiros">
-    <p class="big">Larga ficheiros aqui</p>
-    <p class="small">ou clica para escolher</p>
-    <input id="picker" type="file" multiple hidden>
+  <!-- Os formatos primeiro, como no CloudConvert: quem chega já sabe o que quer. -->
+  <div class="conversor" role="group" aria-label="Escolher formatos">
+    <button type="button" id="entrada" class="cartao" aria-haspopup="dialog">
+      <span class="de">de</span>
+      <span class="ext" id="entradaExt">…</span>
+    </button>
+
+    <button type="button" id="trocar" class="trocar" aria-label="Trocar entrada e saída" disabled>
+      <span aria-hidden="true">⇄</span>
+    </button>
+
+    <button type="button" id="saida" class="cartao saida" aria-haspopup="dialog" disabled>
+      <span class="de">para</span>
+      <span class="ext" id="saidaExt">…</span>
+    </button>
   </div>
 
-  <div class="bar">
-    <label for="to">Converter para</label>
-    <select id="to" disabled><option value="">— escolhe um ficheiro —</option></select>
-    <button id="go" disabled>Converter</button>
+  <div id="drop" tabindex="0" role="button" aria-label="Escolher ou largar ficheiro">
+    <p class="big" id="dropTitulo">Escolhe o formato de entrada</p>
+    <p class="small" id="dropSub">e depois larga o ficheiro</p>
+    <input id="picker" type="file" hidden>
   </div>
 
   <p id="aviso" class="aviso" role="status" hidden></p>
@@ -35,8 +46,15 @@
 </main>
 
 <footer>
-  <p>Processado localmente por binários abertos (LibreOffice, Pandoc, ffmpeg, ImageMagick, poppler).</p>
+  <p>Processado por binários abertos (LibreOffice, Pandoc, ffmpeg, ImageMagick, poppler).</p>
 </footer>
+
+<dialog id="dlg" aria-labelledby="dlgTitulo">
+  <h2 id="dlgTitulo">Formato</h2>
+  <input id="dlgFiltro" type="search" placeholder="filtrar" autocomplete="off" spellcheck="false">
+  <ul id="dlgLista"></ul>
+  <button type="button" id="dlgFechar" class="fechar">Fechar</button>
+</dialog>
 
 <script type="module" src="/app.js"></script>
 </body>

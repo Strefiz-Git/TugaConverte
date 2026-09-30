@@ -39,7 +39,74 @@ header, main, footer { max-width: 760px; margin: 0 auto; }
 
 h1 { margin: 0; font-size: 1.9rem; letter-spacing: -0.02em; }
 
-.sub { margin: 0.25rem 0 1.75rem; color: var(--muted); }
+.sub { margin: 0.25rem 0 1.5rem; color: var(--muted); }
+
+/* Os dois formatos com o botão de troca ao meio, como no CloudConvert. */
+.conversor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.cartao {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 1rem 0.5rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.cartao:hover:not(:disabled), .cartao:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.cartao:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.cartao:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.cartao .de {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+}
+
+.cartao .ext {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 1.3rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.cartao.saida .ext { color: var(--accent); }
+
+.trocar {
+  flex: 0 0 auto;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.trocar:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
+.trocar:disabled { opacity: 0.4; cursor: not-allowed; }
+.trocar:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 #drop {
   border: 2px dashed var(--line);
@@ -57,41 +124,10 @@ h1 { margin: 0; font-size: 1.9rem; letter-spacing: -0.02em; }
 
 #drop:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
-.big { margin: 0; font-size: 1.2rem; font-weight: 600; }
+.big { margin: 0; font-size: 1.2rem; font-weight: 600; overflow-wrap: anywhere; }
 .small { margin: 0.3rem 0 0; color: var(--muted); font-size: 0.9rem; }
 
-.bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  align-items: center;
-  margin: 1.25rem 0;
-}
-
-.bar label { color: var(--muted); font-size: 0.9rem; }
-
-select, button {
-  font: inherit;
-  padding: 0.5rem 0.7rem;
-  border-radius: 8px;
-  border: 1px solid var(--line);
-  background: var(--bg);
-  color: var(--fg);
-}
-
-select { flex: 1 1 12rem; min-width: 0; }
-
-button {
-  background: var(--accent);
-  color: var(--accent-fg);
-  border-color: transparent;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-#list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+#list { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.6rem; }
 
 #list li {
   display: grid;
@@ -104,24 +140,16 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   background: var(--card);
 }
 
-.name { overflow-wrap: anywhere; }
+.nome { overflow-wrap: anywhere; }
+.nome b { display: block; font-weight: 600; }
 
-/* Nomes vêm do utilizador: nunca innerHTML. */
-.name b { display: block; font-weight: 600; }
-
-.state { font-size: 0.85rem; color: var(--muted); grid-column: 1 / -1; }
-.state.ok { color: var(--ok); }
-.state.err { color: var(--err); }
+.estado { font-size: 0.85rem; color: var(--muted); grid-column: 1 / -1; }
+.estado.ok { color: var(--ok); }
+.estado.err { color: var(--err); }
 
 progress { grid-column: 1 / -1; width: 100%; height: 6px; }
 
-a.dl {
-  color: var(--accent);
-  font-weight: 600;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
+a.dl { color: var(--accent); font-weight: 600; text-decoration: none; white-space: nowrap; }
 a.dl:hover { text-decoration: underline; }
 
 button.limpar {
@@ -130,14 +158,13 @@ button.limpar {
   border: 1px solid var(--line);
   font-size: 0.85rem;
   padding: 0.3rem 0.5rem;
+  cursor: pointer;
 }
 
 button.limpar:hover { color: var(--err); border-color: var(--err); }
 
-.note { margin-top: 1.25rem; color: var(--muted); font-size: 0.85rem; }
-
 .aviso {
-  margin: 0 0 1rem;
+  margin: 1rem 0 0;
   padding: 0.7rem 0.85rem;
   border: 1px solid var(--line);
   border-left: 3px solid var(--accent);
@@ -147,4 +174,82 @@ button.limpar:hover { color: var(--err); border-color: var(--err); }
   font-size: 0.9rem;
 }
 
+.note { margin-top: 1.25rem; color: var(--muted); font-size: 0.85rem; }
+
 footer { margin-top: 2.5rem; color: var(--muted); font-size: 0.8rem; text-align: center; }
+
+/* Diálogo de formatos: <dialog> nativo dá Escape, foco e modalidade de graça. */
+#dlg {
+  width: min(26rem, calc(100% - 2rem));
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--fg);
+}
+
+#dlg::backdrop { background: rgb(0 0 0 / 0.5); }
+
+#dlg h2 { margin: 0 0 0.75rem; font-size: 1rem; }
+
+#dlgFiltro {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  font: inherit;
+  color: var(--fg);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+#dlgFiltro:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#dlgLista {
+  list-style: none;
+  margin: 0.75rem 0;
+  padding: 0;
+  max-height: 16rem;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+  gap: 0.35rem;
+}
+
+#dlgLista .vazio { grid-column: 1 / -1; color: var(--muted); font-size: 0.9rem; }
+
+.opcao {
+  width: 100%;
+  padding: 0.45rem 0.3rem;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  background: var(--card);
+  color: var(--fg);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.opcao:hover, .opcao:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.opcao:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.fechar {
+  width: 100%;
+  padding: 0.5rem;
+  font: inherit;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.fechar:hover { color: var(--fg); }
+
+@media (max-width: 420px) {
+  .cartao .ext { font-size: 1.1rem; }
+  .conversor { gap: 0.35rem; }
+}

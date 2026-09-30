@@ -109,6 +109,12 @@ test('/api/formats e /api/health respondem', async (t) => {
   const { app } = await setup();
   t.after(() => app.close());
   assert.deepEqual((await app.inject({ url: '/api/formats' })).json(), { a: ['b'] });
+  // Um deploy não pode deixar ninguém na página antiga: o HTML não é cacheado.
+  const html = await app.inject({ url: '/' });
+  assert.equal(html.headers['cache-control'], 'no-cache');
+  const js = await app.inject({ url: '/app.js' });
+  assert.match(js.headers['cache-control'], /max-age=\d+/, 'os estáticos podem ficar em cache');
+
   const health = (await app.inject({ url: '/api/health' })).json();
   assert.equal(health.ok, true);
   assert.deepEqual(health.engines, ['falso']);

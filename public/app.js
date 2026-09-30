@@ -1,27 +1,29 @@
-// UI sem framework. Formatos vêm sempre de /api/formats (Regra 9).
-const $ = (sel) => document.querySelector(sel);
+// UI sem framework. Os formatos vêm sempre de /api/formats (Regra 9).
+import { createFormatos } from '/formatos.js';
+
+const $ = (s) => document.querySelector(s);
 const drop = $('#drop');
 const picker = $('#picker');
-const toSel = $('#to');
-const go = $('#go');
 const list = $('#list');
 const aviso = $('#aviso');
+const tituloDrop = $('#dropTitulo');
+const subDrop = $('#dropSub');
 
 let matrix = {};
-let files = [];
+let ficheiros = [];
 let semMotores = false;
+let formatos;
 
-const ext = (name) => name.slice(name.lastIndexOf('.') + 1).toLowerCase();
+const ext = (nome) => nome.slice(nome.lastIndexOf('.') + 1).toLowerCase();
 
-function setAviso(msg) {
+function dizer(msg) {
   aviso.textContent = msg || '';
   aviso.hidden = !msg;
 }
 
-async function loadFormats() {
+async function carregarFormatos() {
   try {
-    const res = await fetch('/api/formats');
-    matrix = await res.json();
+    matrix = await (await fetch('/api/formats')).json();
   } catch {
     matrix = {};
   }
@@ -29,104 +31,115 @@ async function loadFormats() {
 
 // Sem binários no servidor, `/api/health` devolve uma lista vazia. Dizer isso
 // é melhor do que deixar o utilizador à espera de um erro sem explicação.
-async function checkMotores() {
+async function estado() {
   const health = await fetch('/api/health').then((r) => r.json()).catch(() => null);
   if (!health) return;
   if (health.ttlMin) $('#ttl').textContent = health.ttlMin;
   semMotores = health.engines.length === 0;
   if (semMotores) {
-    setAviso('Nenhum motor ativo: este servidor não encontrou binários de conversão. '
+    dizer('Nenhum motor ativo: este servidor não encontrou binários de conversão. '
       + 'A forma mais rápida é "docker compose up --build -d". Sem Docker, instala ffmpeg, '
       + 'ImageMagick, Pandoc, poppler e LibreOffice e reinicia o servidor.');
   }
 }
 
-function refreshTargets() {
-  const common = files.map((f) => matrix[ext(f.name)] || []).filter((a) => a.length);
-  const shared = common.length ? common.reduce((a, b) => a.filter((x) => b.includes(x))) : [];
-  const all = new Set(Object.values(matrix).flat());
-
-  toSel.textContent = '';
-  const placeholder = new Option(files.length ? '— escolhe —' : '— escolhe um ficheiro —', '');
-  toSel.append(placeholder);
-
-  const usable = files.length === 1 ? all : shared;
-  for (const t of [...usable].sort()) toSel.append(new Option(`.${t}`, t));
-
-  toSel.disabled = usable.size === 0;
-  go.disabled = usable.size === 0;
+function rotular() {
+  const { entrada, saida } = formatos.get();
+  if (!entrada) {
+    tituloDrop.textContent = 'Escolhe o formato de entrada';
+    subDrop.textContent = 'e depois larga o ficheiro';
+    return;
+  }
+  // O accept vai para o filtro nativo do seletor de ficheiros: menos cliques.
+  picker.accept = `.${entrada}`;
+  tituloDrop.textContent = `Larga o ficheiro .${entrada}`;
+  subDrop.textContent = saida
+    ? `e convertemos para .${saida}`
+    : 'escolhe agora o formato de saída';
 }
 
-function addFiles(incoming) {
-  const aceites = [];
-  for (const file of incoming) {
-    if (!matrix[ext(file.name)]) continue;
-    files.push(file);
-    aceites.push(file);
-    const li = document.createElement('li');
-    const name = document.createElement('div');
-    name.className = 'name';
-    const b = document.createElement('b');
-    b.textContent = file.name;
-    name.append(b);
-    const state = document.createElement('div');
-    state.className = 'state';
-    state.textContent = 'à espera';
-    const bar = document.createElement('progress');
-    bar.max = 100;
-    bar.hidden = true;
-    li.append(name, state, bar);
-    list.append(li);
-    file._ui = { li, state, bar };
+function linha(ficheiro) {
+  const li = document.createElement('li');
+  const nome = document.createElement('div');
+  nome.className = 'nome';
+  const forte = document.createElement('b');
+  forte.textContent = ficheiro.name; // nome do utilizador: só textContent
+  nome.append(forte);
+  const estado = document.createElement('div');
+  estado.className = 'estado';
+  estado.textContent = 'à espera';
+  const barra = document.createElement('progress');
+  barra.max = 100;
+  barra.hidden = true;
+  li.append(nome, estado, barra);
+  list.append(li);
+  ficheiro._ui = { li, estado, barra };
+}
+
+function setEstado(ficheiro, texto, classe = '') {
+  const { estado } = ficheiro._ui;
+  estado.textContent = texto;
+  estado.className = `estado ${classe}`;
+}
+
+function aceitar(recebidos) {
+  const { entrada: esperada } = formatos.get();
+  let aceites = 0;
+
+  for (const ficheiro of recebidos) {
+    const format = ext(ficheiro.name);
+    // Com os formatos escolhidos à frente, o ficheiro tem de ser do formato
+    // pedido. Só se nenhum foi escolhido é que basta ser um formato conhecido.
+    const serve = esperada ? format === esperada : Boolean(matrix[format]);
+    if (!serve) continue;
+    ficheiros.push(ficheiro);
+    linha(ficheiro);
+    aceites += 1;
   }
-  refreshTargets();
 
   // Ignorar um ficheiro em silêncio é a forma mais rápida de perder a confiança
   // de quem está a usar o site: dizer o que não foi aceite, e porquê.
-  if (aceites.length) return;
+  if (aceites) return;
   if (semMotores) return; // o aviso dos motores já explica tudo
-  const rejeitado = incoming[0];
+  const rejeitado = recebidos[0];
   if (!rejeitado) return;
-  const extensao = ext(rejeitado.name);
-  setAviso(extensao.length > 10 || rejeitado.name.startsWith('.')
-    ? 'Esse ficheiro não tem extensão reconhecível.'
-    : `Este servidor não converte ficheiros .${extensao}.`);
-}
-
-function setState(file, text, cls = '') {
-  const { state } = file._ui;
-  state.textContent = text;
-  state.className = `state ${cls}`;
+  const format = ext(rejeitado.name);
+  if (!format || format === rejeitado.name) {
+    dizer('Esse ficheiro não tem extensão reconhecível.');
+  } else if (esperada) {
+    dizer(`Espera-se um ficheiro .${esperada}, não .${format}.`);
+  } else {
+    dizer(`Este servidor não converte ficheiros .${format}.`);
+  }
 }
 
 // XMLHttpRequest e não fetch: só o XHR dá progresso de envio.
-function upload(file) {
+function enviar(ficheiro, destino) {
   return new Promise((resolve, reject) => {
     const form = new FormData();
-    form.append('file', file);
+    form.append('file', ficheiro);
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', `/api/jobs?to=${encodeURIComponent(toSel.value)}`);
+    xhr.open('POST', `/api/jobs?to=${encodeURIComponent(destino)}`);
     xhr.upload.onprogress = (e) => {
       if (!e.lengthComputable) return;
-      file._ui.bar.hidden = false;
-      file._ui.bar.value = (e.loaded / e.total) * 100;
-      setState(file, `a enviar ${Math.round((e.loaded / e.total) * 100)}%`);
+      ficheiro._ui.barra.hidden = false;
+      ficheiro._ui.barra.value = (e.loaded / e.total) * 100;
+      setEstado(ficheiro, `a enviar ${Math.round((e.loaded / e.total) * 100)}%`);
     };
     xhr.onload = () => {
-      let body = {};
-      try { body = JSON.parse(xhr.responseText); } catch { /* resposta não-JSON */ }
-      if (xhr.status === 202) resolve(body.id);
-      else reject(new Error(body.error || `erro ${xhr.status}`));
+      let corpo = {};
+      try { corpo = JSON.parse(xhr.responseText); } catch { /* resposta não-JSON */ }
+      if (xhr.status === 202) resolve(corpo.id);
+      else reject(new Error(corpo.error || `erro ${xhr.status}`));
     };
     xhr.onerror = () => reject(new Error('falha de rede'));
     xhr.send(form);
   });
 }
 
-async function poll(file, id) {
+async function esperar(id) {
   for (;;) {
-    const res = await fetch(`/api/jobs/${encodeURIComponent(id)}`);
-    const job = await res.json();
+    const job = await fetch(`/api/jobs/${encodeURIComponent(id)}`).then((r) => r.json());
     if (job.status === 'done' || job.status === 'error') return job;
     await new Promise((r) => setTimeout(r, 700));
   }
@@ -134,68 +147,74 @@ async function poll(file, id) {
 
 // O job só pode ser apagado depois de descarregado: apagar aqui fazia o link
 // devolver 404 no clique seguinte.
-function link(file, id) {
+function ligacoes(ficheiro, id) {
   const url = `/api/jobs/${encodeURIComponent(id)}`;
   const limpar = () => fetch(url, { method: 'DELETE' }).catch(() => {});
 
-  const a = document.createElement('a');
-  a.className = 'dl';
-  a.href = `${url}/download`;
-  a.textContent = 'descarregar';
-  a.addEventListener('click', () => {
-    a.textContent = 'a descarregar…';
+  const link = document.createElement('a');
+  link.className = 'dl';
+  link.href = `${url}/download`;
+  link.textContent = 'descarregar';
+  link.addEventListener('click', () => {
+    link.textContent = 'a descarregar…';
     // Tempo para o browser pegar no ficheiro antes de o servidor o apagar.
     setTimeout(limpar, 30_000);
   });
-  file._ui.li.append(a);
+  ficheiro._ui.li.append(link);
 
-  const btn = document.createElement('button');
-  btn.className = 'limpar';
-  btn.type = 'button';
-  btn.textContent = 'apagar';
-  btn.title = 'Apagar este ficheiro do servidor';
-  btn.addEventListener('click', () => { limpar(); btn.remove(); a.remove(); });
-  file._ui.li.append(btn);
+  const botao = document.createElement('button');
+  botao.className = 'limpar';
+  botao.type = 'button';
+  botao.textContent = 'apagar';
+  botao.title = 'Apagar este ficheiro do servidor';
+  botao.addEventListener('click', () => { limpar(); botao.remove(); link.remove(); });
+  ficheiro._ui.li.append(botao);
 }
 
-async function run(file) {
+async function converter(ficheiro, destino) {
   try {
-    setState(file, 'a converter');
-    const id = await upload(file);
-    const job = await poll(file, id);
+    setEstado(ficheiro, 'a converter');
+    const job = await esperar(await enviar(ficheiro, destino));
     if (job.status === 'error') throw new Error(job.error || 'conversão falhou');
-    setState(file, `pronto · ${fmt(job.size)}`, 'ok');
-    link(file, id);
+    setEstado(ficheiro, `pronto · ${tamanho(job.size)}`, 'ok');
+    ligacoes(ficheiro, job.id);
   } catch (err) {
-    setState(file, err.message, 'err');
+    setEstado(ficheiro, err.message, 'err');
   }
 }
 
-function fmt(bytes) {
+function tamanho(bytes) {
   if (!bytes) return '';
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
-  return `${(bytes / 1024 ** i).toFixed(i ? 1 : 0)} ${units[i]}`;
+  const unidades = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.min(unidades.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
+  return `${(bytes / 1024 ** i).toFixed(i ? 1 : 0)} ${unidades[i]}`;
 }
 
-go.addEventListener('click', () => {
-  if (!toSel.value) return;
-  go.disabled = true;
-  for (const file of files) run(file);
-  setTimeout(() => { go.disabled = false; }, 500);
-});
+function converterTodos(entrada) {
+  const { saida } = formatos.get();
+  if (!saida) {
+    dizer('Escolhe primeiro o formato de saída.');
+    return;
+  }
+  aceitar(entrada);
+  // A lista é reiniciada a cada conversão: os ficheiros anteriores já partiram.
+  const novos = ficheiros.splice(0);
+  for (const ficheiro of novos) converter(ficheiro, saida);
+}
 
 drop.addEventListener('click', () => picker.click());
 drop.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); picker.click(); }
 });
-picker.addEventListener('change', () => addFiles([...picker.files]));
+picker.addEventListener('change', () => converterTodos([...picker.files]));
 
 ['dragenter', 'dragover'].forEach((ev) =>
   drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave', 'drop'].forEach((ev) =>
   drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
-drop.addEventListener('drop', (e) => addFiles([...(e.dataTransfer?.files || [])]));
+drop.addEventListener('drop', (e) => converterTodos([...(e.dataTransfer?.files || [])]));
 
-await loadFormats();
-await checkMotores();
+await carregarFormatos();
+await estado();
+formatos = createFormatos({ matrix, onChange: rotular });
+rotular();
