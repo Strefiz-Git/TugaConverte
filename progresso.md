@@ -2,6 +2,36 @@
 
 Diário do projeto, mais recente em cima. Escrever com a skill `progresso`.
 
+## 2026-10-01 · Verificar tudo, e dois bugs que só o browser apanhou
+
+**O que fiz**
+Passei o site inteiro a sério, não por partes: cada motor pelo browser, cada download aberto e confrontado com a assinatura do ficheiro, o ZIP de lote aberto pelo 7-Zip de verdade, o diálogo de formatos pelo teclado, os controlos todos com nome. E converti 13 pares de uma vez para ver o que saía.
+
+**Dois bugs meus, ambos reais, ambos invisíveis aos testes**
+
+1. **Toda a conversão sem opções estava a ser recusada.** Escrevi a query do `POST` como `[opcoes && \`to=...\`, opcoes]`: quando não havia opções — que é o caso de quase tudo — o `to` desaparecia e o servidor respondia "não faço essa conversão". Passou-me porque só testei com um destino que *tem* opções (jpg). O `check` estava certo, os 62 testes passavam. Apanhou o clique no browser.
+2. **O download de tudo o que é LibreOffice rebentava.** O LibreOffice não escreve `output.pdf`: deriva o nome do input e escreve `input.pdf`. O download e o ZIP de lote tinham `output.<ext>` escrito à mão, e rebentavam com ENOENT. A interface dizia "pronto · 11,1 KB" e o ficheiro não baixava. **Toda a família do escritório** (doc, docx, odt, rtf, txt, html, xls, xlsx, ods, csv, ppt, pptx, odp) estava assim desde o início, e eu tinha dito que estava verificado porque o job chegava a `done`. Não estava.
+
+**Como ficou**
+O job guarda o nome que o motor deixou (`job.produced`), e o download e o ZIP vão buscá-lo. `tests/produzido.test.js` cobre os dois caminhos com um motor que escreve `input.pdf`, como o LibreOffice. Para o URL, `urlDeJob` saiu de dentro do `criarJob` para uma função pura, com três testes.
+
+**A regra que saiu disto**
+"Verificado" (Regra 15) tinha ficado a significar "o job chegou a `done`". Não chega: um job pode ficar pronto e o ficheiro não existe. A verificação de um fluxo de conversão tem de acabar com os **bytes do ficheiro final**, abertos e conferidos. Da próxima vez que um fluxo conte como verificado, é assim que se escreve no diário.
+
+**Verificado agora, com os bytes**
+- 13 conversões de 6 motores, todas com ficheiro final não vazio e a assinatura certa: `%PDF`, `PK`, `ffd8ffe0`, `RIFF`, `BM`, `II*`, `ID3`, `GIF8`, `1a45dfa3` (matroska/webm), `<!DO`.
+- O bitrate muda mesmo o ficheiro: wav para mp3 a 64 kbps dá 48 KB, a 320 kbps dá 242 KB. E `bitrate=9999` dá exactamente o mesmo que 320, `bitrate=abc` dá o mesmo que o omisso.
+- O ZIP de lote com 12 resultados abre no 7-Zip: 12 ficheiros, 415 KB comprimidos.
+- No browser: png→jpg com qualidade 10 dá 1,3 KB e com 95 dá 14,5 KB; txt→pdf baixa 12 KB com assinatura `%PDF` e o nome `notas.pdf` no header.
+- Diálogo de formato: abre, o foco vai para o filtro, `docx` dá um resultado, escolher fecha. Escolher `MD` e largar um `.md` não dá aviso; escolher `DOCX` e largar um `.png` dá aviso a dizer que ficou com outro destino.
+
+**Duas coisas pequenas**
+Dois controlos estavam sem nome acessível (o `input` de ficheiros e o campo de filtro do diálogo). Levaram `aria-label`.
+O orçamento do front-end estava a 15 bytes do tecto. Em vez de o subir outra vez, encurtei comentários nos ficheiros do browser: cada byte de comentário é um byte que o browser recebe, e o `check` mede ficheiro a ficheiro como o servidor serve.
+
+**Não verificado**
+O Docker continua por construir: WSL não está instalado nesta máquina. E `mp4` sem faixa de áudio para `mp3` dá erro, que é o que deve dar — mas o texto é o do ffmpeg, em inglês e com muita informacão, em vez de "este vídeo não tem áudio". Fica anotado.
+
 ## 2026-10-01 · Opções por conversão
 
 **Feito**

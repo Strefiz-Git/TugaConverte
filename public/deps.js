@@ -1,8 +1,6 @@
 // Porquê que isto não converte? Por motor, o que falta e o comando para
-// instalar no sistema que a pessoa escolhe.
-//
-// Não instala nada. Instalar exigiria root no contentor, e um site que pede
-// `curl | sh` para converter ficheiros não está a fazer o que diz.
+// instalar. Não instala nada: exigiria root, e um site que pede `curl | sh`
+// para converter ficheiros não está a fazer o que diz.
 export function mostrarDependencias({ raiz, aviso }) {
   let dados = null;
   let sistema = null;

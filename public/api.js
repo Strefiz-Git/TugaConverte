@@ -1,8 +1,7 @@
 // Falar com a API. Só isto: nada de DOM, nada de estado de ecrã.
 
-// Como os `code` da API viram português. As chaves têm de bater certo com
-// `src/core/erros.js`; o `check` não valida ficheiros do browser, por isso este
-// mapa é o ponto a mexer quando um código nasce.
+// Como os `code` da API viram português. Têm de bater certo com
+// `src/core/erros.js`: este mapa é o ponto a mexer quando um código nasce.
 const POR_CODE = {
   FILE_TOO_LARGE: 'O ficheiro é maior do que este servidor aceita.',
   UNKNOWN_FORMAT: 'Este servidor não faz essa conversão.',
@@ -18,6 +17,13 @@ function explicar(err) {
   return (err.code && POR_CODE[err.code]) || err.message;
 }
 
+// O URL de um pedido de conversão: o destino vai sempre, os ajustes só quando
+// existem. Função pura de propósito — é o que os testes apertam, porque aqui uma
+// linha trocada só se vê no browser, e o browser não avisa ninguém.
+export function urlDeJob(destino, opcoes = '') {
+  return `/api/jobs?to=${encodeURIComponent(destino)}${opcoes ? `&${opcoes}` : ''}`;
+}
+
 // XMLHttpRequest e não fetch: só o XHR dá progresso de envio.
 // `opcoes` é a query que o servidor valida e limita (ver `src/core/opcoes.js`).
 export function criarJob(ficheiro, destino, opcoes, aoProgitar) {
@@ -25,9 +31,7 @@ export function criarJob(ficheiro, destino, opcoes, aoProgitar) {
     const form = new FormData();
     form.append('file', ficheiro);
     const xhr = new XMLHttpRequest();
-    const query = [opcoes && `to=${encodeURIComponent(destino)}`, opcoes]
-      .filter(Boolean).join('&');
-    xhr.open('POST', `/api/jobs?${query}`);
+    xhr.open('POST', urlDeJob(destino, opcoes));
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) aoProgitar(e.loaded / e.total);
     };

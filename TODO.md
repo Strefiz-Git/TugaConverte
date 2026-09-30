@@ -25,6 +25,7 @@
 - [ ] Motor de arquivos (zip/tar/7z) com descompactar e recomprimir.
 - [ ] Notificações de fim sem polling: SSE em `/api/jobs/:id/events`.
 - [x] Opções por conversão: qualidade (jpg, jpeg, webp) e bitrate (mp3, m4a, aac, ogg, opus), com campo por linha na interface e `GET /api/opcoes`.
+- [ ] Erros do binário traduzidos: hoje a mensagem é a stderr do ffmpeg ou do ImageMagick, em inglês e longa. O caso mais comum é `mp4 -> mp3` sem faixa de áudio, que devia dizer "este vídeo não tem áudio".
 - [ ] Opções por formato que ainda não existem: páginas do PDF a extrair, resolución do vídeo.
 - [ ] Endpoint de capacidades por motor: que operações, versões e opções existem (como o deles). `/api/opcoes` já cobre as opções por destino; falta o resto.
 

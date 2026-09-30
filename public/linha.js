@@ -1,9 +1,5 @@
-// O que aparece no fim de cada ficheiro: link de download, botão de apagar e
-// a consola com o comando que o servidor correu. E, quando há dois ou mais
-// resultados, o link para os levar todos num ZIP.
-//
-// Tudo isto vive junto porque partilha a mesma regra: o job só pode ser
-// apagado depois de descarregado, e é essa acção que alimenta o ZIP de lote.
+// O fim de cada ficheiro: download, apagar, consola, e o ZIP de lote. Vive
+// junto porque o ZIP se alimenta da acção de apagar.
 
 export function setEstado(ficheiro, texto, classe = '') {
   const { estado } = ficheiro._ui;

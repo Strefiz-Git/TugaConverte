@@ -35,7 +35,7 @@
   <div id="drop" tabindex="0" role="button" aria-label="Escolher ou largar ficheiros">
     <p class="big" id="dropTitulo">Larga os ficheiros aqui</p>
     <p class="small" id="dropSub">e escolhe o destino de cada um</p>
-    <input id="picker" type="file" multiple hidden>
+    <input id="picker" type="file" multiple hidden aria-label="Ficheiros para converter">
   </div>
 
   <p id="aviso" class="aviso" role="status" hidden></p>
@@ -65,7 +65,7 @@
 
 <dialog id="dlg" aria-labelledby="dlgTitulo">
   <h2 id="dlgTitulo">Formato</h2>
-  <input id="dlgFiltro" type="search" placeholder="filtrar" autocomplete="off" spellcheck="false">
+  <input id="dlgFiltro" type="search" placeholder="filtrar" aria-label="Filtrar formatos" autocomplete="off" spellcheck="false">
   <ul id="dlgLista"></ul>
   <button type="button" id="dlgFechar" class="fechar">Fechar</button>
 </dialog>

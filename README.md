@@ -4,6 +4,8 @@ Conversor de ficheiros **sem limites**. Inspirado no CloudConvert, ao contrário
 
 Se tens um ficheiro e precisas dele noutro formato, mandas e recebes. Só isso. Podes largar vários ficheiros de tipos diferentes ao mesmo tempo — cada linha tem o seu destino — e a interface oferece "descarregar os N resultados num ZIP".
 
+As cartas no topo servem para escolher o par de formatos (por exemplo DOCX → PDF). Não são uma grade: se largares um ficheiro que não é do formato escolhido, ele entra na mesma com destino próprio, e a interface avisa-te disso em vez de o aceitar em silêncio.
+
 ## Como correr
 
 ### Docker (recomendado)

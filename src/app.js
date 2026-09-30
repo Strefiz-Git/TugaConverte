@@ -57,6 +57,11 @@ export function buildApp({ registry, jobs, queue, runFn, config }) {
     return catalogoOpcoes();
   });
 
+  // Onde está o resultado de um job. Por omissão `output.<ext>`, que é o que a
+  // maioria dos motores escreve; o LibreOffice é a excepção (deriva o nome do
+  // input) e por isso o job guarda o nome que ficou.
+  const ficheiroDoJob = (job) => job.produced || `output.${job.to}`;
+
   app.get('/api/health', async () => ({
     ok: true,
     engines: registry.engines.map((e) => e.id),
@@ -107,6 +112,10 @@ export function buildApp({ registry, jobs, queue, runFn, config }) {
           timeoutSec: config.jobTimeoutSec, registrar, progresso,
         });
         job.size = (await fs.promises.stat(out)).size;
+        // Nem todo o motor escreve `output.<ext>`: o LibreOffice deriva o nome
+        // do input e escreve `input.pdf`. O job guarda o nome que ficou, senão
+        // o download ia procurar um ficheiro que nunca existiu.
+        job.produced = path.basename(out);
         job.status = 'done';
       } catch (err) {
         job.status = 'error';
@@ -148,7 +157,7 @@ export function buildApp({ registry, jobs, queue, runFn, config }) {
     reply.header('content-length', job.size);
     reply.header('content-type', 'application/octet-stream');
     reply.header('content-disposition', `attachment; filename*=UTF-8''${encodeURIComponent(`${base}.${job.to}`)}`);
-    return reply.send(fs.createReadStream(path.join(job.dir, `output.${job.to}`)));
+    return reply.send(fs.createReadStream(path.join(job.dir, ficheiroDoJob(job))));
   });
 
   // Vários resultados num ZIP. Conhecer os UUID é a credencial (Regra 8), como
@@ -170,8 +179,8 @@ export function buildApp({ registry, jobs, queue, runFn, config }) {
         return falha(reply, 409, CODIGO.JOB_NAO_PRONTO, `O job ${id} ainda não está pronto.`);
       }
       const base = path.basename(job.name, path.extname(job.name)) || 'ficheiro';
-      const ficheiro = path.join(job.dir, `output.${job.to}`);
-      entradas.push({ nome: base, ext: job.to, dados: await fs.promises.readFile(ficheiro) });
+      const dados = await fs.promises.readFile(path.join(job.dir, ficheiroDoJob(job)));
+      entradas.push({ nome: base, ext: job.to, dados });
     }
 
     const zip = criarZip(entradas);

@@ -1,8 +1,6 @@
-// O ajuste de cada conversão: qualidade da imagem, bitrate do áudio.
-//
-// O que cada destino aceita vem de `/api/opcoes` (Regra 9): uma lista escrita
-// à mão no browser acabaria a prometer ajustes que o servidor não faz, ou a
-// esconder ajustes que ele aceita.
+// O ajuste de cada conversão: qualidade da imagem, bitrate do áudio. O que cada
+// destino aceita vem de `/api/opcoes` (Regra 9): à mão no browser, a lista
+// acabaria a prometer ajustes que o servidor não faz.
 let catalogo = { destinos: {} };
 
 export async function carregarOpcoes() {
@@ -43,7 +41,7 @@ export function ajustarOpcao(select, nomeFicheiro) {
 
 const rotulo = (def) => (def.unidade === 'kbps' ? 'bitrate' : 'qualidade');
 
-/** O que vai na query do POST, a partir do que está no `select`. */
+/** O que vai na query do POST, a partir do `select`. */
 export function opcoesDe(select) {
   const params = new URLSearchParams();
   for (const def of catalogo.destinos[select.value] || []) {

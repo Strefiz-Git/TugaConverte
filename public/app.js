@@ -38,8 +38,8 @@ async function carregarFormatos() {
   }
 }
 
-// Sem binários no servidor, `/api/health` devolve uma lista vazia. Dizer isso
-// é melhor do que deixar o utilizador à espera de um erro sem explicação.
+// Sem binários, `/api/health` devolve uma lista vazia. Dizer isso é melhor do
+// que deixar à espera de um erro sem explicação.
 async function estado() {
   const health = await fetch('/api/health').then((r) => r.json()).catch(() => null);
   if (!health) return;
@@ -85,9 +85,8 @@ function linha(ficheiro) {
   ajustarOpcao(destino, ficheiro.name);
 }
 
-// Cada ficheiro tem o seu destino, com as opções que o servidor aceita para
-// a extensão dele. Sem isto, converter ficheiros de tipos diferentes ao mesmo
-// tempo era impossível.
+// O destino de cada ficheiro, com os ajustes que o servidor aceita para ele.
+// Sem isto, converter ficheiros de tipos diferentes ao mesmo tempo era impossível.
 function selectDestino(ficheiro) {
   const select = document.createElement('select');
   select.className = 'destino';
@@ -116,21 +115,31 @@ function aplicarSugestao(saida) {
 
 function aceitar(recebidos) {
   let aceites = 0;
+  const foraDoPar = [];
 
   for (const ficheiro of recebidos) {
     // Qualquer formato que o servidor saiba converter entra na lista; o
     // destino escolhe-se por linha. Só o que não existe de todo é recusado.
-    if (!matrix[ext(ficheiro.name)]) continue;
+    const formato = ext(ficheiro.name);
+    if (!matrix[formato]) continue;
+    const { entrada } = formatos.get();
+    if (entrada && formato !== entrada) foraDoPar.push(formato);
     ficheiros.push(ficheiro);
     linha(ficheiro);
     aceites += 1;
   }
 
   // Ignorar um ficheiro em silêncio é a forma mais rápida de perder a confiança
-  // de quem está a usar o site: dizer o que não foi aceite, e porquê.
+  // de quem está a usar o site: dizer o que não foi aceite.
   if (aceites) {
     const { saida } = formatos.get();
     aplicarSugestao(saida);
+    // Escolheste DOCX → PDF e largaste um PNG: ele entra na mesma, com
+    // destino próprio, mas é bom dizer que o par escolhido não lhe serve.
+    if (foraDoPar.length) {
+      dizer(`${foraDoPar.map((f) => '.' + f).join(', ')} não é o formato escolhido, `
+        + 'por isso ficou com outro destino. Podes mudá-lo na linha.');
+    }
     return;
   }
   if (semMotores) return; // o aviso dos motores já explica tudo
@@ -217,7 +226,7 @@ async function arrancar() {
     aoEscolher: (ext) => formatos.escolher('entrada', ext),
   });
   const dados = await fetch('/api/catalogo').then((r) => r.json()).catch(() => null);
-  // Com zero motores ativos um catálogo vazio é só barulho: escondemos a secção.
+  // Sem motores ativos o catálogo é barulho: escondemos a secção.
   if (dados && dados.total) {
     zonaCatalogo.hidden = false;
     catalogo.definir(dados);

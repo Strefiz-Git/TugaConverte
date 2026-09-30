@@ -19,6 +19,7 @@ O que está no HTML da página deles e o que muda o nosso desenho:
 
 - **As operações vão muito além de converter**: optimize, add watermarks, capture website, create thumbnails, **merge files**, operações de PDF, create archives, file metadata e **execute commands**. Nós temos uma: converter. As que nos interessam mesmo são *merge*, *thumbnails* e *archives*.
 - **`execute-commands` deixa correr comandos no servidor deles.** Nós nunca. É uma superfície de ataque que nem com contentor sem rede fica aceitável, e o que ganhamos com isso não é conversão de ficheiros.
+- **Data no ZIP a 1980.** O escritor de ZIP, escrito à mão, põe a data a zero porque é o valor mais simples que o formato aceita. O 7-Zip abre bem, mas o Explorador mostra "01/01/1980" em cada ficheiro. Meter a data real do job é meia hora.
 - **Erros com `code` legível por máquina** (`OPEN_FAILED`, `INVALID_DATA`, `TOO_MANY_REQUESTS`), `message` para a pessoa e `errors` por campo. O nosso devolve só `{ error: "texto em português" }` — um cliente não consegue ramificar. **No TODO.**
 - **Engines e versões de engine.** Para DOCX há `office` e `libreoffice`, e a versão pode ser fixada para que uma atualização não mude o resultado. E há um endpoint por tipo de tarefa que devolve engines, versões e opções disponíveis. É a direcção certa para quando tivermos `options` nos motores.
 - **Dizer para não repetir tarefas automaticamente**: eles repetem por dentro quando o erro é transitório. Repete-se por dentro, nunca por fora.
