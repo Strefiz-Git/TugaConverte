@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TugaConverte — converte tudo, sem limites</title>
+<meta name="description" content="Conversor de ficheiros sem quotas nem limites de tamanho.">
+<link rel="stylesheet" href="/style.css">
+<link rel="icon" href="data:,">
+</head>
+<body>
+<header>
+  <h1>TugaConverte</h1>
+  <p class="sub">Converte quase tudo. Sem quotas, sem limite de tamanho, sem contas.</p>
+</header>
+
+<main>
+  <div id="drop" tabindex="0" role="button" aria-label="Escolher ou largar ficheiros">
+    <p class="big">Larga ficheiros aqui</p>
+    <p class="small">ou clica para escolher</p>
+    <input id="picker" type="file" multiple hidden>
+  </div>
+
+  <div class="bar">
+    <label for="to">Converter para</label>
+    <select id="to" disabled><option value="">— escolhe um ficheiro —</option></select>
+    <button id="go" disabled>Converter</button>
+  </div>
+
+  <ul id="list" aria-live="polite"></ul>
+
+  <p class="note">Os ficheiros são apagados <span id="ttl">120</span> minutos depois da conversão.</p>
+</main>
+
+<footer>
+  <p>Processado localmente por binários abertos (LibreOffice, Pandoc, ffmpeg, ImageMagick, poppler).</p>
+</footer>
+
+<script type="module" src="/app.js"></script>
+</body>
+</html>

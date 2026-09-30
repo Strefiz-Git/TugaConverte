@@ -1,0 +1,24 @@
+services:
+  tugaconverte:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - dados:/data
+    environment:
+      PORT: 3000
+      DATA_DIR: /data
+      CONCURRENCY: 0        # 0 = CPUs - 1
+      MAX_UPLOAD_MB: 0      # 0 = ilimitado
+      JOB_TIMEOUT_SEC: 0    # 0 = sem timeout
+      TTL_MIN: 120
+    restart: unless-stopped
+    # Sem rede: os binários não precisam de sair para a internet.
+    read_only: true
+    tmpfs:
+      - /tmp:size=2g
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  dados:
