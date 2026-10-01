@@ -11,6 +11,7 @@ import { convert } from './core/convert.js';
 import { CODIGO, falha } from './core/erros.js';
 import { criarZip } from './core/zip.js';
 import { catalogoOpcoes, validar as validarOpcoes } from './core/opcoes.js';
+import { mensagemDeErro } from './core/traduzir.js';
 
 const PUBLIC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
 const EXT = /^[a-z0-9]{1,10}$/;
@@ -120,8 +121,10 @@ export function buildApp({ registry, jobs, queue, runFn, config }) {
       } catch (err) {
         job.status = 'error';
         job.code = CODIGO.CONVERSAO_FALHOU;
-        // Só sai o caminho do job, nunca o nome do utilizador.
-        job.error = err.message.split(job.dir).join('…');
+        // Uma frase em português, sem caminhos do servidor nem códigos de saída.
+        // O texto cru do binário continua no `log`, que é para isso que serve.
+        registrar(`! ${err.message}\n`);
+        job.error = mensagemDeErro(err.message, { from, to }).split(job.dir).join('…');
       }
     });
 

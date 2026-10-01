@@ -112,7 +112,10 @@ test('uma conversão que falha reporta CONVERSION_FAILED no job', async (t) => {
   const job = (await app.inject({ url: `/api/jobs/${id}` })).json();
   assert.equal(job.status, 'error');
   assert.equal(job.code, 'CONVERSION_FAILED');
-  assert.match(job.error, /corrompido/);
+  // A pessoa vê uma frase; o texto cru do binário fica na consola.
+  assert.match(job.error, /conversão falhou/i);
+  assert.doesNotMatch(job.error, /corrompido/, 'o erro cru não é a mensagem para a pessoa');
+  assert.match(job.log, /corrompido/, 'mas tem de estar no log, que é o registo do que aconteceu');
 });
 
 test('o limite do operador responde 413 com o seu code', async (t) => {
@@ -214,7 +217,8 @@ test('o binário que falha deixa o job em erro com mensagem', async (t) => {
   await settle();
   const job = (await app.inject({ url: `/api/jobs/${id}` })).json();
   assert.equal(job.status, 'error');
-  assert.match(job.error, /corrompido/);
+  assert.match(job.error, /conversão falhou/i, 'a pessoa vê uma frase, não a stderr');
+  assert.match(job.log, /corrompido/, 'a stderr fica na consola, que é o registo');
   assert.equal((await app.inject({ url: `/api/jobs/${id}/download` })).statusCode, 404);
 });
 

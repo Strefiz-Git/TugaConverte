@@ -44,6 +44,42 @@ test('ImageMagick: percentagem do stderr', () => {
   assert.equal(leitor.stdout(''), 42);
 });
 
+test('ffmpeg: a ordem em que chegam não muda o resultado', () => {
+  // O Node entrega o stderr e o stdout como calhar. Se o progresso chegar
+  // primeiro, é a leitura do stderr que tem de fechar a conta.
+  const primeiroProgresso = criarLeitorFfmpeg();
+  assert.equal(primeiroProgresso.stdout('out_time_us=1000000\n'), null, 'sem duração ainda não há nada');
+  assert.equal(primeiroProgresso.stderr('Duration: 00:00:04.00, start: 0.0\n'), 25,
+    'a duração que chega depois ainda entrega a percentagem');
+
+  const primeiroStderr = criarLeitorFfmpeg();
+  primeiroStderr.stderr('Duration: 00:00:04.00\n');
+  assert.equal(primeiroStderr.stdout('out_time_us=3000000\n'), 75);
+});
+
+test('ffmpeg: uma linha partida entre dois pedaços é a mesma linha', () => {
+  // Isto acontece mesmo: o ffmpeg escreve `Duration:` numa escrita e
+  // `00:00:04.00, start: 0.0` na seguinte. O pipe corta onde lhe apetece.
+  const leitor = criarLeitorFfmpeg();
+  leitor.stderr("Input #0, mov,mp4, from 'input.mp4':\n  Duration:");
+  assert.equal(leitor.stdout('out_time_us=1000000\n'), null, 'ainda não há duração');
+  assert.equal(leitor.stderr(' 00:00:04.00, start: 0.0, bitrate: 55 kb/s\n'), 25,
+    'a linha partida tem de contar como a linha inteira');
+
+  // O bloco de progresso também chega cortado a meio, a meio de uma chave.
+const meio = criarLeitorFfmpeg();
+  meio.stderr('Duration: 00:00:10.00\n');
+  assert.equal(meio.stdout('frame=200\nout_time_us=3000000\nout_time_'), 30);
+  assert.equal(meio.stdout('ms=3000000\nprogress=continue\n'), 30,
+    'a segunda metade da linha não muda nada, mas também não perde o resto');
+});
+
+test('ImageMagick: a percentagem partida também conta', () => {
+  const leitor = criarLeitorImagemMagick();
+  assert.equal(leitor.stderr('resize image[a.png]: 84 of 200, 4'), null);
+  assert.equal(leitor.stderr('2% complete\n'), 42);
+});
+
 test('um motor que não declara progresso não recebe leitor', () => {
   assert.equal(criarLeitor({ id: 'libreoffice' }), null);
   assert.equal(criarLeitor({ id: 'ffmpeg', progresso: 'ffmpeg' }).stdout('x'), null);

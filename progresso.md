@@ -2,6 +2,29 @@
 
 Diário do projeto, mais recente em cima. Escrever com a skill `progresso`.
 
+## 2026-10-01 · Erros em português, e a percentagem que falhava uma em doze
+
+**Feito: erros traduzidos.** `src/core/traduzir.js` traduz as stderr dos binários para uma frase curta em português. `mp4` sem áudio para `mp3` passou de um despejo de 300 caracteres em inglês (com o caminho do servidor no meio e um código de saída de 4294967274) para **"Este ficheiro não tem áudio."**. O texto cru não se perde: vai para o `log`, que é o registo, e a interface mostra-o num clique. O job também passa a registar a própria falha no log, para o registo estar completo mesmo quando o binário não disse nada.
+
+**Dois bugs de stream, encontrados por um teste instável**
+
+O teste real do ffmpeg falhava uma vez em três. Em vez de lhe chamar "instável" e pronto, medi: corri a mesma conversão 12 vezes e o resultado deu `100` em 10 e nada em 2. Duas causas, ambas reais:
+
+1. **O pipe corta uma linha ao meio.** O ffmpeg escreve `Duration:` numa escrita e `00:00:04.00` na seguinte. O parser via a regex num pedaço de cada vez e não via nada. Agora o leitor guarda o bocado que ficou pela frente e junta-o ao seguinte. Depois da correcção: **0 falhas em 12**.
+2. **A ordem dos dois fluxos não é garantida.** O tempo processado vem no stdout e a duração no stderr, e o Node entrega-os como calhar. Se o progresso chega primeiro, era a leitura do stderr que fechava a conta. Agora cada um recalcula a partir do que já sabe.
+
+E, ao medir, achei uma terceira coisa: o `runner` cortava os pipes 150 ms depois de o processo sair. O ffmpeg escreve o stderr todo de uma vez, no fim, e essa escrita às vezes perdia-se — perdíamos o fim da mensagem de erro *e* a linha da percentagem. Agora o `runner` espera pelo `close`, que é quando o último pedaço já foi lido, com uma espera pelo silêncio (150 ms depois do último byte) e um tecto de 5 s para o caso do processo que não larga o pipe. **A consola da interface passa a ter a stderr completa.**
+
+**Verificado que não houve piora**
+Medi o custo: `txt` para `pdf` por LibreOffice demora 2,8 s no servidor, e o `soffice.exe` sozinho, à mão, demora 3,2 s. O arranque do LibreOffice é que é lento; o `runner` não custava nada e agora devolve a saída toda.
+Os testes com binários reais passaram 3 vezes seguidas, 12 de 12. `npm test`: **73 passam, 0 falham, 0 saltam**.
+
+**Os padrões não são inventados**
+Cada tradução vem de uma falha real deste servidor, e o teste de cada uma usa a mensagem tal e qual como o binário a escreveu. A de `mp4` sem áudio tem quatro linhas de stderr reais; a de PDF falso tem o `Syntax Warning` e o `Couldn't find trailer dictionary` do poppler.
+
+**O que ficou por decidir**
+Um erro que ninguém reconhece passa a dizer *"A conversão falhou. Abre 'ver o que o servidor correu' para saber porquê."* em vez de despejar a stderr. É melhor para quem lê, mas perde-se o detalhe para quem programa pela API. Quem quiser o texto cru tem o `log` no mesmo pedido — e talvez valha a pena um campo `error_bruto` para quem quiser sem ir buscar o log. Apontado no TODO.
+
 ## 2026-10-01 · Verificar tudo, e dois bugs que só o browser apanhou
 
 **O que fiz**

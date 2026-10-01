@@ -101,7 +101,7 @@ Toda a resposta de erro traz `error` (mensagem em português, para mostrar) e `c
 | 404 | `JOB_NOT_FOUND` | Job inexistente |
 | 404 | `JOB_NOT_READY` | O job ainda não terminou (ou já foi apagado) |
 | 413 | `FILE_TOO_LARGE` | Acima de `MAX_UPLOAD_MB`, se o operador o ligou |
-| — | `CONVERSION_FAILED` | O job terminou em erro; a causa está em `error` |
+| — | `CONVERSION_FAILED` | O job terminou em erro; `error` diz o que aconteceu em português e o `log` traz a mensagem do binário |
 
 ```bash
 ID=$(curl -s -F file=@foto.png "http://localhost:3000/api/jobs?to=jpg" | sed 's/.*"id":"\([^"]*\)".*/\1/')
@@ -110,6 +110,8 @@ curl -s -o foto.jpg "http://localhost:3000/api/jobs/$ID/download"
 ```
 
 O `id` é um UUID: quem o tem é quem pode descarregar. Os ficheiros são apagados `TTL_MIN` minutos depois. A UI mostra um botão "apagar" por linha, que apaga o ficheiro de imediato.
+
+Quando a conversão falha, `error` traz uma frase curta em português — "O ficheiro não parece vídeo MP4.", "Este ficheiro não tem áudio.", "O ficheiro parece estar cortado a meio." — sem caminhos do servidor nem códigos de saída. A verdade toda está no `log`.
 
 O campo `log` traz a linha de comando e o que o binário disse, que a interface mostra num painel "ver o que o servidor correu". Não tem nada do teu ficheiro dentro: em disco o input chama-se `input.<ext>` e o output `output.<ext>`, e o caminho do job sai limpo. Podes usá-lo para depurar uma conversão que correu mal.
 

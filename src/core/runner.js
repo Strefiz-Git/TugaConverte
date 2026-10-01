@@ -2,11 +2,14 @@
 import { spawn } from 'node:child_process';
 
 const MAX_ERR = 800;
-// Espera por este tempo depois de o processo sair, para o stderr chegar.
-// O LibreOffice no Windows é um caso real: `soffice.exe` deixa um processo
-// filho a segurar o pipe, e esperar pelo 'close' (que só dispara quando todos
-// os streams fecham) ficava à espera para sempre.
-const SAIR = 150;
+// Tempo sem bytes depois de o processo sair. Não é espera fixa: cada pedaço que
+// chega adia o fim, porque o último bloco de saída ainda pode estar a caminho.
+// Com uma espera fixa de 150 ms perdíamos a linha `Duration` do ffmpeg uma vez
+// em doze (e perdíamos também o fim da mensagem de erro dos outros).
+const SILENCIO = 150;
+// Tecto absoluto, para o caso de um pipe que pinga sem parar. Cinco segundos é
+// muito para um binário que já saiu.
+const TECTO = 5000;
 
 export function run({ cmd, args, dir, timeoutSec = 0, registrar, leitor }) {
   return new Promise((resolve, reject) => {
@@ -19,19 +22,43 @@ export function run({ cmd, args, dir, timeoutSec = 0, registrar, leitor }) {
 
     let err = '';
     let timer = null;
-    let acabou = false;
+    let espera = null;
+    let limite = null;
+    let codigo = null;
+    let sinal = null;
+    let saiu = false;
+    let resolvido = false;
 
-    const terminar = (code, signal) => {
-      if (acabou) return;
-      acabou = true;
+    const fechar = () => {
+      if (resolvido) return;
+      resolvido = true;
+      if (espera) clearTimeout(espera);
+      if (limite) clearTimeout(limite);
+      child.stderr.destroy();
+      child.stdout.destroy();
+      if (codigo === 0) return resolve({ err });
+      const why = sinal ? `terminado por ${sinal}` : `código ${codigo}`;
+      reject(new Error(`${cmd} ${why}${err ? `: ${err.trim()}` : ''}`));
+    };
+
+    // Depois de o processo sair, o 'close' é o caminho normal: só dispara quando
+    // os dois pipes fecham, ou seja, quando o último pedaço já foi lido. O
+    // `soffice.exe` do LibreOffice no Windows nunca fecha (deixa um processo
+    // filho a segurar o pipe), por isso há a espera pelo silêncio e o tecto.
+    const terminar = (code, quemMatou) => {
+      codigo = code;
+      sinal = quemMatou;
+      saiu = true;
       if (timer) clearTimeout(timer);
-      setTimeout(() => {
-        child.stderr.destroy();
-        child.stdout.destroy();
-        if (code === 0) return resolve({ err });
-        const why = signal ? `terminado por ${signal}` : `código ${code}`;
-        reject(new Error(`${cmd} ${why}${err ? `: ${err.trim()}` : ''}`));
-      }, SAIR);
+      child.once('close', fechar);
+      if (code !== 127) adiar();
+      limite = setTimeout(fechar, TECTO);
+    };
+
+    const adiar = () => {
+      if (resolvido) return;
+      if (espera) clearTimeout(espera);
+      espera = setTimeout(fechar, SILENCIO);
     };
 
     const reporta = (fonte) => (chunk) => {
@@ -42,9 +69,12 @@ export function run({ cmd, args, dir, timeoutSec = 0, registrar, leitor }) {
         if (err.length < MAX_ERR) err += texto.slice(0, MAX_ERR);
       }
       // A percentagem só interessa se o binário a der.
-      if (!leitor) return;
-      const p = fonte === 'stdout' ? leitor.stdout(texto) : leitor.stderr(texto);
-      if (typeof p === 'number' && leitor.aoProgitar) leitor.aoProgitar(p);
+      if (leitor) {
+        const p = fonte === 'stdout' ? leitor.stdout(texto) : leitor.stderr(texto);
+        if (typeof p === 'number' && leitor.aoProgitar) leitor.aoProgitar(p);
+      }
+      // Saiu o processo e ainda havia dados: o fim tem de esperar por eles.
+      if (saiu) adiar();
     };
 
     child.stderr.on('data', reporta('stderr'));
@@ -56,7 +86,10 @@ export function run({ cmd, args, dir, timeoutSec = 0, registrar, leitor }) {
     if (registrar) registrar(`$ ${[cmd, ...args].join(' ')}\n`);
 
     child.on('error', (e) => {
-      if (!acabou) terminar(127, null);
+      if (!saiu) {
+        codigo = 127;
+        saiu = true;
+      }
       reject(new Error(`não consegui correr ${cmd}: ${e.message}`));
     });
 
